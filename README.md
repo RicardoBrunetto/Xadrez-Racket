@@ -2,17 +2,19 @@
 Segundo Trabalho de Paradigma de Programação Lógica e Funcional
 
 # TODO:
-- [ ] Movimento das peças
-  - [ ] Peão
-  - [ ] Torre
+- [x] Movimento das peças
+  - [x] Peão
+  - [x] Torre
   - [x] Cavalo
   - [x] Bispo
-  - [ ] Rainha
-  - [ ] Rei
-  - [ ] FUNÇÃO DE FILTRO (OBSTÁCULOS)
-- [ ] Testes
+  - [x] Rainha
+  - [x] Rei
+  - [x] FUNÇÃO DE FILTRO (OBSTÁCULOS)
 - [ ] GUI
   - [ ] Plot das peças
   - [ ] Mouse event handler
   - [ ] Plot das possibilidades de movimento    
+- [ ] Testes
+  - [ ] Documentação de CADA função
+  - [ ] Testes de CADA função
 - [ ] IA
