@@ -13,6 +13,7 @@
 ;|          Importação de Bibliotecas         |
 ;+--------------------------------------------+
 (require math)
+(require 2htdp/universe)
 (require math/matrix)
 (require rackunit)
 (require rackunit/text-ui)
@@ -31,6 +32,7 @@
 (define u 0) ;Intercalar o tabuleiro com as cores
 (define h 0) ;Posição inicial do eixo x
 (define v 0) ;Posição inicial de eixo y
+(define select 0) ;Variável para controlar os cliques (selecionar origem = 0 / selecionar destino = 1)
 
 ;Definição do Tabuleiro (configuração inicial no arquivo definicoes.rkt)
 (define tabuleiro (mutable-array #[#[A8 B8 C8 D8 E8 F8 G8 H8]
@@ -223,7 +225,45 @@
 ;+--------------------------------------------+
 ;|              Interface Gráfica             |
 ;+--------------------------------------------+
+;Posicao -> Cor
+;Retorna a cor de fundo que uma determinada posição posX deve ter no tabuleiro
+(define (get-background-pos posX)
+  (if (even? (+ (pos-x posX) (pos-y posX))) branco preto)
+)
 
+;Lista -> void
+;Altera a a propriedade destinavel das peças em Lp para vf
+(define (change-selecao-pos Lp vf)
+  (cond
+    [(empty? Lp) Lp]
+    [else (
+      void
+      (let ([posR (first Lp)])
+      (set! posR (struct-copy pos posR[destinavel vf]))
+      (array-set! tabuleiro (vector (pos-x posR) (pos-y posR)) posR) empty)
+      (reset-selecao-pos (rest Lp))
+      )]
+))
+
+;Lista -> void
+;Altera a a propriedade destinavel das peças em Lp para #f
+(define (reset-selecao-pos Lp)
+  (change-selecao-pos Lp #f)
+)
+
+;Lista -> void
+;Altera a a propriedade destinavel das peças em Lp para #t
+(define (make-selecao-pos Lp)
+  (change-selecao-pos Lp #t)
+)
+
+(define (desenhar-gui)
+  0
+)
+
+;(big-bang
+ ; 0
+;)
 ;(define make-display
 ;  (for ([v (in-range 11 651 80)])
 ;    (if (equal? u 0)

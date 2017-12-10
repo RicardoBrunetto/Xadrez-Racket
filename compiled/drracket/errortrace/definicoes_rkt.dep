@@ -1,1 +1,1 @@
-("6.11" ("51709edc7b17e0ec00f53dbf4135a49fd2c32fa8" . "dc4010a8f37eeef92f5028c48b366733022447c5") (collects #"errortrace" #"errortrace-key.rkt") (collects #"graphics" #"graphics.rkt") (collects #"racket" #"main.rkt") (collects #"racket" #"runtime-config.rkt"))
+("6.11" ("8c0ed08f00dbe8e1a796b482f534307c6228aa83" . "dc4010a8f37eeef92f5028c48b366733022447c5") (collects #"errortrace" #"errortrace-key.rkt") (collects #"graphics" #"graphics.rkt") (collects #"racket" #"main.rkt") (collects #"racket" #"runtime-config.rkt"))
