@@ -14,6 +14,8 @@
 ;+--------------------------------------------+
 (require math)
 (require 2htdp/universe)
+(require 2htdp/image)
+(require lang/posn)
 (require math/matrix)
 (require rackunit)
 (require rackunit/text-ui)
@@ -92,6 +94,15 @@
   )
 )
 
+;Posicao -> Boolean
+;Verifica se uma peça tem a propriedade destinável como #t
+(define (destinavel? posX)
+  (cond
+    [(empty? posX) #f]
+    [else (pos-destinavel posX)]
+  )
+)
+
 ;+--------------------------------------------+
 ;|            Manipulação das Peças           |
 ;+--------------------------------------------+
@@ -158,7 +169,8 @@
     (cond
       [(empty? Lf) Lp]
       [else (dist-recursivo-pos-interno (rest Lf)
-             (append (get-recursivo-pos-interno (first Lf) (get-pos-valida-tabuleiro ((first (first Lf)) (pos-x posX)) ((second (first Lf)) (pos-y posX))) empty) Lp)
+             (append (get-recursivo-pos-interno (first Lf)
+                     (get-pos-valida-tabuleiro ((first (first Lf)) (pos-x posX)) ((second (first Lf)) (pos-y posX))) empty) Lp)
             )]
       )
   )
@@ -257,13 +269,67 @@
   (change-selecao-pos Lp #t)
 )
 
-(define (desenhar-gui)
-  0
+
+(define tamanho-quadrado 100)
+(define celula (square tamanho-quadrado "outline" "black"))
+(define layout (empty-scene (* 8 tamanho-quadrado) (* 8 tamanho-quadrado)))
+
+(define (generate-celula posX)
+  (if (destinavel? posX)
+      (square tamanho-quadrado "solid" verde)
+      (if(even? (+(pos-x posX) (pos-y posX)))
+        (square tamanho-quadrado "solid" branco)
+        (square tamanho-quadrado "solid" preto))
+  )
 )
 
-;(big-bang
- ; 0
-;)
+(define (second-generate-celula Lpar)
+  (define (second-interno Lp Lpos)
+    (cond
+      [(empty? Lp) Lpos]
+      [else
+       (let ([posX (get-pos-valida-tabuleiro (first (first Lp)) (second (first Lp)))])
+       (if (destinavel? posX)
+           (second-interno (rest Lp) (cons (square tamanho-quadrado "solid" verde) Lpos))
+           (if(even? (+(pos-x posX) (pos-y posX)))
+              (second-interno (rest Lp) (cons (square tamanho-quadrado "solid" branco) Lpos))
+              (second-interno (rest Lp) (cons (square tamanho-quadrado "solid" preto) Lpos)))
+           ))])
+  )
+  (second-interno Lpar empty)
+)
+
+(define (generate-layout)
+  (array->list (array-map generate-celula tabuleiro))
+)
+
+(define (generate-posn Lpar-xy)
+  (define (generate-posn-interno Lp Lpos)
+    (cond
+      [(empty? Lp) Lpos]
+      [else (generate-posn-interno (rest Lp)
+            (cons (make-posn (+ (/ tamanho-quadrado 2) (* tamanho-quadrado (second (first Lp)))) (+ (/ tamanho-quadrado 2) (* tamanho-quadrado (first (first Lp))))) Lpos))]
+    )
+  )
+  (generate-posn-interno Lpar-xy empty)
+)
+
+(define (desenhar-gui w)
+  (define Lpar-xy (cartesian-product (range 8) (range 8)))
+  (place-images
+  ; (list celula)
+  ; (list (make-posn 650 50))
+   (second-generate-celula Lpar-xy)
+   (generate-posn Lpar-xy)
+   layout
+  )
+)
+
+(big-bang
+  0
+  (to-draw desenhar-gui)
+)
+
 ;(define make-display
 ;  (for ([v (in-range 11 651 80)])
 ;    (if (equal? u 0)
@@ -285,9 +351,9 @@
 
 ;; Teste ... -> Void
 ;; Executa um conjunto de testes.
-(define (executa-testes . testes)
-  (run-tests (test-suite "Todos os testes" testes))
-  (void))
+;(define (executa-testes . testes)
+;  (run-tests (test-suite "Todos os testes" testes))
+;  (void))
 
 ; Chama a função para executar os testes.
 ;(executa-testes

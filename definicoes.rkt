@@ -2,10 +2,9 @@
 
 (provide (all-defined-out))
 
-(require (lib "graphics.ss" "graphics"))
-(define preto (make-rgb 0.4 0.4 0.4))
-(define branco (make-rgb 0.255 0.255 0.255))
-(define verde (make-rgb 0.4 0.14 0.25))
+(define preto "black")
+(define branco "white")
+(define verde "green")
 
 (struct peca (id tipo cor) #:transparent #:mutable)
 ;Estrutura de posição do tabuleiro
