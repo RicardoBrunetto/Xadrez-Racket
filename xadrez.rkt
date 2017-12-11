@@ -271,36 +271,25 @@
 
 
 (define tamanho-quadrado 100)
-(define celula (square tamanho-quadrado "outline" "black"))
+(define (make-celula cor)
+  (square tamanho-quadrado "outline" cor)
+)
 (define layout (empty-scene (* 8 tamanho-quadrado) (* 8 tamanho-quadrado)))
 
-(define (generate-celula posX)
-  (if (destinavel? posX)
-      (square tamanho-quadrado "solid" verde)
-      (if(even? (+(pos-x posX) (pos-y posX)))
-        (square tamanho-quadrado "solid" branco)
-        (square tamanho-quadrado "solid" preto))
+(define (generate-layout Lpar)
+(define (generate-layout-interno Lp Lpos)
+  (cond
+    [(empty? Lp) Lpos]
+    [else
+     (let ([posX (get-pos-valida-tabuleiro (first (first Lp)) (second (first Lp)))])
+     (if (destinavel? posX)
+         (generate-layout-interno  (rest Lp) (cons (make-celula verde) Lpos))
+         (if(even? (+(pos-x posX) (pos-y posX)))
+            (generate-layout-interno  (rest Lp) (cons (make-celula branco) Lpos))
+            (generate-layout-interno  (rest Lp) (cons (make-celula preto) Lpos)))
+         ))])
   )
-)
-
-(define (second-generate-celula Lpar)
-  (define (second-interno Lp Lpos)
-    (cond
-      [(empty? Lp) Lpos]
-      [else
-       (let ([posX (get-pos-valida-tabuleiro (first (first Lp)) (second (first Lp)))])
-       (if (destinavel? posX)
-           (second-interno (rest Lp) (cons (square tamanho-quadrado "solid" verde) Lpos))
-           (if(even? (+(pos-x posX) (pos-y posX)))
-              (second-interno (rest Lp) (cons (square tamanho-quadrado "solid" branco) Lpos))
-              (second-interno (rest Lp) (cons (square tamanho-quadrado "solid" preto) Lpos)))
-           ))])
-  )
-  (second-interno Lpar empty)
-)
-
-(define (generate-layout)
-  (array->list (array-map generate-celula tabuleiro))
+  (generate-layout-interno Lpar empty)
 )
 
 (define (generate-posn Lpar-xy)
@@ -317,9 +306,7 @@
 (define (desenhar-gui w)
   (define Lpar-xy (cartesian-product (range 8) (range 8)))
   (place-images
-  ; (list celula)
-  ; (list (make-posn 650 50))
-   (second-generate-celula Lpar-xy)
+   (generate-layout-interno Lpar-xy)
    (generate-posn Lpar-xy)
    layout
   )
