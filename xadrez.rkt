@@ -277,17 +277,17 @@
 (define layout (empty-scene (* 8 tamanho-quadrado) (* 8 tamanho-quadrado)))
 
 (define (generate-layout Lpar)
-(define (generate-layout-interno Lp Lpos)
-  (cond
-    [(empty? Lp) Lpos]
-    [else
-     (let ([posX (get-pos-valida-tabuleiro (first (first Lp)) (second (first Lp)))])
-     (if (destinavel? posX)
-         (generate-layout-interno  (rest Lp) (cons (make-celula verde) Lpos))
-         (if(even? (+(pos-x posX) (pos-y posX)))
-            (generate-layout-interno  (rest Lp) (cons (make-celula branco) Lpos))
-            (generate-layout-interno  (rest Lp) (cons (make-celula preto) Lpos)))
-         ))])
+  (define (generate-layout-interno Lp Lpos)
+    (cond
+      [(empty? Lp) Lpos]
+      [else
+       (let ([posX (get-pos-valida-tabuleiro (first (first Lp)) (second (first Lp)))])
+       (if (destinavel? posX)
+           (generate-layout-interno  (rest Lp) (cons (make-celula verde) Lpos))
+           (if(even? (+(pos-x posX) (pos-y posX)))
+              (generate-layout-interno  (rest Lp) (cons (make-celula branco) Lpos))
+              (generate-layout-interno  (rest Lp) (cons (make-celula preto) Lpos)))
+           ))])
   )
   (generate-layout-interno Lpar empty)
 )
