@@ -11,9 +11,13 @@ Segundo Trabalho de Paradigma de Programação Lógica e Funcional
   - [x] Rei
   - [x] FUNÇÃO DE FILTRO (OBSTÁCULOS)
 - [ ] GUI
-  - [ ] Plot das peças
-  - [ ] Mouse event handler
-  - [ ] Plot das possibilidades de movimento    
+  - [x] Plot das peças
+  - [x] Mouse event handler
+  - [x] Plot das possibilidades de movimento    
+  - [ ] Barra inferior
+    - [x] Placar
+    - [ ] Jogador corrente
+  - [ ] Tela final
 - [ ] Testes
   - [ ] Documentação de CADA função
   - [ ] Testes de CADA função
