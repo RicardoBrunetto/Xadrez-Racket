@@ -26,3 +26,4 @@ Segundo Trabalho de Paradigma de Programação Lógica e Funcional
   - [x] Documentação de CADA função
   - [x] Testes de CADA função
 - [x] IA
+  - [x] IA vs IA

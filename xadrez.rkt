@@ -31,8 +31,10 @@
 (define jogadores empty)
 (define ranking empty)
 (define jogadorIA preto) ;Define quem é o jogador IA
+(define jogadorIA-dois empty) ;Define quem é o jogador IA
 (define jogadorHumano branco) ;Define quem é o jogador Humano
 (define select 0) ;Variável para controlar os cliques (selecionar origem = 0 / selecionar destino = 1)
+(define movimentos 0) ;Variável para contar os movimentos
 (define jogador-atual branco) ;Define quem é o jogador atual
 (define possibilidades-temporarias empty) ;Lista de possibilidades de locomoção temporárias
 (define posicao-origem empty) ;Posição de origem (de onde um jogador deseja fazer o movimento)
@@ -122,6 +124,7 @@
 ;void -> cor
 ;Altera a vez de quem está jogando, retornando-a.
 (define (change-player)
+  (set! movimentos (add1 movimentos))
   (if (equal? jogador-atual branco)
       (set! jogador-atual preto)
       (set! jogador-atual branco))
@@ -204,12 +207,12 @@
    (cond
      [(empty? (pos-peca p2)) void]
      [else
-      (if (equal? (peca-tipo (pos-peca p2)) "rei")
-          (set! king-is-dead 1)
-          (if(equal? jogador-atual branco)
-            (set! pts-branco (+ pts-branco (get-pontos-pos p2)))
-            (set! pts-preto (+ pts-preto (get-pontos-pos p2)))
-          )
+      (cond [(equal? (peca-tipo (pos-peca p2)) "rei")
+              (set! king-is-dead 1)]
+            [(equal? jogador-atual branco)
+             (set! pts-branco (+ pts-branco (get-pontos-pos p2)))]
+            [(equal? jogador-atual preto)
+             (set! pts-preto (+ pts-preto (get-pontos-pos p2)))]
           )])
    (set! p2 (struct-copy pos p2[peca (pos-peca p1)] [destinavel #f]))
    (set! p1 (struct-copy pos p1[peca empty]))
@@ -486,7 +489,8 @@
        (generate-layout-interno  (rest Lp) (cons (make-celula (get-background-pos posX) posX) Lpos))
       ]
   ))
-  (append (generate-layout-interno Lpar-xy empty) (list (bottom-bar (jogada-ptsB w) (jogada-ptsP w) (jogada-jogador w))))
+  (cond [(not (empty? jogadorIA-dois)) (sleep 1)])
+  (append (generate-layout-interno Lpar-xy empty) (list (bottom-bar (jogada-ptsB w) (jogada-ptsP w) (jogada-jogador w) movimentos)))
 )
 
 ;void -> Lista[posn]
@@ -510,6 +514,7 @@
   (set! king-is-dead (jogada-king jogada-inicial))
   (set! pts-branco (jogada-ptsB jogada-inicial))
   (set! pts-preto (jogada-ptsP jogada-inicial))
+  (set! movimentos 0)
   (make-jogada tabuleiro jogador-atual king-is-dead pts-branco pts-preto)
 )
 
@@ -585,15 +590,21 @@
      (generate-posn)
      layout
     )
-    (make-end-screen w)
+    (make-end-screen w movimentos)
   )
 )
 
 ;jogada -> jogada
 ;Caso a IA esteja habilitada, faz uma jogada
 (define (vez-da-IA w)
-  (if (equal? (jogada-jogador w) jogadorIA)
-    (jogada-IA w)
+  (if (zero? (jogada-king w))
+    (if (equal? (jogada-jogador w) jogadorIA)
+      (jogada-IA w)
+      (if (empty? jogadorIA-dois)
+        w
+        (jogada-IA w)
+      )
+    )
     w
   )
 )
@@ -610,7 +621,15 @@
   )
 )
 
-(start-new-game)
+;void -> universe
+;Inicia um novo jogo entre duas IA's
+(define (start-new-ia-game)
+  (set! jogadorIA-dois preto)
+  (start-new-game)
+)
+
+
+(start-new-ia-game)
 ;+--------------------------------------------+
 ;|                Tela Inicial                |
 ;+--------------------------------------------+
