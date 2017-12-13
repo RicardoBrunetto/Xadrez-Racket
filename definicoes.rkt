@@ -29,9 +29,11 @@
 ;Estrutura que define uma jogada (World)
 (struct jogada (tab jogador king ptsB ptsP))
 
-(struct jogador (nome vitorias cor))
+;Estrutura que define um jogador
+(struct jogador (nome pontos cor))
 
 ;color -> string
+;Retorna o nome do jogador
 (define (get-nome player)
   (cond
     [(equal? player branco) "BRANCO"]
@@ -59,8 +61,12 @@
       (rectangle lado-tabuleiro (+ lado-tabuleiro altura-bottombar) "solid" "black")
       pic-gameover
     )
-    (text/font (string-append " Vitória do Jogador " (get-nome (jogada-jogador partida)) "\n Contagem de peças destruídas \n" (number->string (jogada-ptsB partida)) " brancas\t" (number->string (jogada-ptsP partida)) " pretas")
-          30 branco "Gill Sans" 'swiss 'normal 'bold #f)
+    (underlay/align "center" "center"
+      (text/font (string-append " Vitória do Jogador " (get-nome (jogada-jogador partida)))
+            30 branco "Gill Sans" 'swiss 'normal 'bold #f)
+      (text/font (string-append "\n Contagem de peças destruídas \n" (number->string (jogada-ptsB partida)) " brancas\t" (number->string (jogada-ptsP partida)) " pretas")
+            30 branco "Gill Sans" 'swiss 'normal 'bold #f)
+    )
   )
 )
 
@@ -76,6 +82,10 @@
 ;Contém uma peça do tipo struct peca
 (struct pos (x y destinavel peca) #:transparent #:mutable)
 
+;+--------------------------------------------+
+;|           Definição das Imagens            |
+;+--------------------------------------------+
+
 (define b-peao (bitmap "imagens/peaob.png"))
 (define b-torre (bitmap "imagens/torreb.png"))
 (define b-cavalo (bitmap "imagens/cavalob.png"))
@@ -89,6 +99,10 @@
 (define p-bispo (bitmap "imagens/bispop.png"))
 (define p-rainha (bitmap "imagens/rainhap.png"))
 (define p-rei (bitmap "imagens/reip.png"))
+
+;+--------------------------------------------+
+;|            Definição das Peças             |
+;+--------------------------------------------+
 
 ;Peças Brancas
 (define pB0 (peca 0 "peao" branco b-peao))
@@ -133,6 +147,11 @@
 
 (define qP0 (peca 30 "rainha" preto p-rainha))
 (define kP0 (peca 31 "rei"    preto p-rei))
+
+
+;+--------------------------------------------+
+;|           Definição do Tabuleiro           |
+;+--------------------------------------------+
 
 ;Configuração do Tabuleiro
 (define A8 (pos 0 0 #f tP0))    (define B8 (pos 0 1 #f cP0))    (define C8 (pos 0 2 #f bP0))    (define D8 (pos 0 3 #f qP0))    (define E8 (pos 0 4 #f kP0))    (define F8 (pos 0 5 #f bP1))    (define G8 (pos 0 6 #f cP1))    (define H8 (pos 0 7 #f tP1))

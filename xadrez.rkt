@@ -28,7 +28,8 @@
 ;+--------------------------------------------+
 ;|                 Definições                 |
 ;+--------------------------------------------+
-(define jogadorIA preto) ;Define quem é o jogador IA
+(define ranking empty)
+(define jogadorIA empty) ;Define quem é o jogador IA
 (define jogadorHumano branco) ;Define quem é o jogador Humano
 (define select 0) ;Variável para controlar os cliques (selecionar origem = 0 / selecionar destino = 1)
 (define jogador-atual branco) ;Define quem é o jogador atual
@@ -132,7 +133,7 @@
           [(equal? tipo "cavalo") 5]
           [(equal? tipo "bispo") 7]
           [(equal? tipo "rainha") 10]
-          [(equal? tipo "rei") 15]
+          [(equal? tipo "rei") 49]
    ))])
 )
 
@@ -470,21 +471,27 @@
   (array-ref tabuleiro (vector x y)))
 )
 
-(define (make-jogada t j k pb pp)
-  (jogada t j k pb pp)
+;mutable-array jogador number number number -> jogada (world)
+;Cria uma jogada (world) com os atributos
+(define (make-jogada newTabuleiro newJogador newKing newPb newPp)
+  (jogada newTabuleiro newJogador newKing newPb newPp)
 )
 
+;void -> number
+;Retorna o jogador atual
 (define (get-jogador)
   jogador-atual
 )
 
+;void -> number
+;Retorna a variável de vitória atual
 (define (check-king)
   king-is-dead)
 
 ;jogada number number string -> void
 ;Manipula um evento de mouse (MouseEvent) nas coordenadas x y
 (define (mouse-handler ws x y event)
-  (cond [(equal? (jogada-jogador ws) jogadorIA) ws]
+  (cond [(and (not (empty? jogadorIA))(equal? (jogada-jogador ws) jogadorIA)) ws]
         [(string=? event "button-down")
          (let ([posClicada (get-pos-at (quotient y 100) (quotient x 100))])
            (if (empty? posClicada) ws
