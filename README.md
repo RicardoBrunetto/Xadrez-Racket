@@ -17,7 +17,9 @@ Segundo Trabalho de Paradigma de Programação Lógica e Funcional
   - [x] Barra inferior
     - [x] Placar
     - [x] Jogador corrente  
-  - [ ] Tela final
+  - [x] Tela final
+    - [x] Repetição
+  - [ ] Coordenadas
   - [ ] Ranking
   - [ ] Sistema de Jogadores
 - [x] Testes

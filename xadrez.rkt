@@ -30,7 +30,6 @@
 ;+--------------------------------------------+
 (define jogadores empty)
 (define ranking empty)
-(define continuar 0)
 (define jogadorIA preto) ;Define quem é o jogador IA
 (define jogadorHumano branco) ;Define quem é o jogador Humano
 (define select 0) ;Variável para controlar os cliques (selecionar origem = 0 / selecionar destino = 1)
@@ -49,19 +48,8 @@
                                    #[A3 B3 C3 D3 E3 F3 G3 H3]
                                    #[A2 B2 C2 D2 E2 F2 G2 H2]
                                    #[A1 B1 C1 D1 E1 F1 G1 H1]]))
-(define jogada-inicial (make-jogada (mutable-array-copy tabuleiro) jogador-atual king-is-dead pts-branco pts-preto)); Como o jogo deve começar
-
-(define (set-jogada-as-inicial w)
-  (set! tabuleiro (mutable-array-copy (jogada-tab jogada-inicial)))
-  (set! jogador-atual (jogada-jogador jogada-inicial))
-  (set! king-is-dead (jogada-king jogada-inicial))
-  (set! pts-branco (jogada-ptsB jogada-inicial))
-  (set! pts-preto (jogada-ptsP jogada-inicial))
-  ;(void (display king-is-dead)) 
-  (make-jogada (mutable-array-copy tabuleiro) jogador-atual 0 pts-branco pts-preto)
-  ;(start-new-game)
-  ;(set! continuar empty)
-)
+;Definição de como o jogo deve começar
+(define jogada-inicial (make-jogada (mutable-array-copy tabuleiro) jogador-atual king-is-dead pts-branco pts-preto))
 ; Lista de funções para as possibilidades de locomoção do Cavalo
 (define Lf-Cavalo (list (list (λ(x)(sub1 x))  (λ(y)(+ y 2)))
                         (list (λ(x)(add1 x))  (λ(y)(+ y 2)))
@@ -209,8 +197,8 @@
 ;|            Manipulação das Peças           |
 ;+--------------------------------------------+
 
-;Peca Peca Jogada -> Tabuleiro
-;Retorna um novo tabuleiro onde p1 assumiu o lugar de p2 e p2 está fora da Jogada
+;peca peca mutable-array -> jogada
+;Retorna um novo tabuleiro onde p1 assumiu o lugar de p2 e p2 está fora da jogada
 (define (mover-peca p1 p2 tabinterno)
   (void
    (cond
@@ -266,6 +254,7 @@
     [(peca-cor-igual? pos1 posC) empty]
     [else pos1]
 ))
+
 ;Posicao Posicao -> Posicao
 ;Função de validade do Peão. Retorna pos1 caso seja permitido que o Peão (em posP) chegue em pos1. Retorna empty caso contrário.
 (define (validar-pos-peao pos1 posP)
@@ -428,6 +417,7 @@
 ;+--------------------------------------------+
 ;|              Interface Gráfica             |
 ;+--------------------------------------------+
+
 ;Posicao -> Cor
 ;Retorna a cor de fundo que uma determinada posição posX deve ter no tabuleiro
 (define (get-background-pos posX)
@@ -460,7 +450,7 @@
   (change-selecao-pos Lp #t tab)
 )
 
-;Peca -> image
+;peca -> image
 ;Retorna a imagem de centro (primeiro plano) da célula
 (define (get-image pec)
   (cond
@@ -510,6 +500,17 @@
     )
   )
   (append (generate-posn-interno Lpar-xy empty) (list (make-posn (/ largura-bottombar 2) (+ (/ altura-bottombar 2) lado-tabuleiro))))
+)
+
+;jogada -> jogada
+;Reseta a jogada w para o estado inicial (jogada-inicial)
+(define (set-jogada-as-inicial w)
+  (set! tabuleiro (mutable-array-copy (jogada-tab jogada-inicial)))
+  (set! jogador-atual (jogada-jogador jogada-inicial))
+  (set! king-is-dead (jogada-king jogada-inicial))
+  (set! pts-branco (jogada-ptsB jogada-inicial))
+  (set! pts-preto (jogada-ptsP jogada-inicial))
+  (make-jogada tabuleiro jogador-atual king-is-dead pts-branco pts-preto)
 )
 
 ;number number -> Pos
@@ -567,17 +568,17 @@
 (define (key-handler w key)
  (cond
    [(key=? key "\r")
-    (cond [(equal? (jogada-king w) 1) (set-jogada-as-inicial w)])
+    (cond [(equal? (jogada-king w) 1) (set-jogada-as-inicial w)]
+          [else w])
    ]
-  )
-  w
+   [else w]
+ )
 )
-
 
 ;jogada -> image
 ;Desenha a interface gráfica do usuário
 (define (desenhar-gui w)
-  (void (display (jogada-king w)))
+  ; (void (display (jogada-king w)))
   (if (zero? (jogada-king w))
     (place-images
      (generate-layout w)
@@ -588,7 +589,7 @@
   )
 )
 
-;jogada -> Jogada
+;jogada -> jogada
 ;Caso a IA esteja habilitada, faz uma jogada
 (define (vez-da-IA w)
   (if (equal? (jogada-jogador w) jogadorIA)
@@ -597,23 +598,16 @@
   )
 )
 
-(define (stop-world w)
-  (cond
-    [(empty? continuar) #t]
-    [else #f]
-  )
-)
-
 ;void -> universe
 ;Inicia um novo jogo
 (define (start-new-game)
   (big-bang (make-jogada tabuleiro jogador-atual king-is-dead pts-branco pts-preto)
-    (on-key   key-handler)
     (to-draw  desenhar-gui)
     (on-mouse mouse-handler)
     (on-tick  vez-da-IA)
+    (on-key   key-handler)
     (name     "Xadrez")
-    )
+  )
 )
 
 (start-new-game)

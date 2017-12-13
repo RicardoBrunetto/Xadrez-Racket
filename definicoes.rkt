@@ -52,9 +52,9 @@
   (underlay/align "left" "bottom"
     (underlay/align "center" "center"
       (rectangle largura-bottombar altura-bottombar "solid" btn-bar-color)
-      (text (string-append "Brancos " (number->string placarB) " x " (number->string placarP) " Pretos") 24 "black")
+      (text (string-append "Brancos " (number->string placarB) " x " (number->string placarP) " Pretos") 24 "white")
     )
-    (text (string-append " Vez do jogador " (get-nome player)) 18 "black")
+    (text (string-append " Vez do jogador " (get-nome player)) 18 "white")
   )
 )
 
