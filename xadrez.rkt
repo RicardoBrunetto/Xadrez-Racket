@@ -28,8 +28,10 @@
 ;+--------------------------------------------+
 ;|                 Definições                 |
 ;+--------------------------------------------+
+(define jogadores empty)
 (define ranking empty)
-(define jogadorIA empty) ;Define quem é o jogador IA
+(define continuar 0)
+(define jogadorIA preto) ;Define quem é o jogador IA
 (define jogadorHumano branco) ;Define quem é o jogador Humano
 (define select 0) ;Variável para controlar os cliques (selecionar origem = 0 / selecionar destino = 1)
 (define jogador-atual branco) ;Define quem é o jogador atual
@@ -47,6 +49,19 @@
                                    #[A3 B3 C3 D3 E3 F3 G3 H3]
                                    #[A2 B2 C2 D2 E2 F2 G2 H2]
                                    #[A1 B1 C1 D1 E1 F1 G1 H1]]))
+(define jogada-inicial (make-jogada (mutable-array-copy tabuleiro) jogador-atual king-is-dead pts-branco pts-preto)); Como o jogo deve começar
+
+(define (set-jogada-as-inicial w)
+  (set! tabuleiro (mutable-array-copy (jogada-tab jogada-inicial)))
+  (set! jogador-atual (jogada-jogador jogada-inicial))
+  (set! king-is-dead (jogada-king jogada-inicial))
+  (set! pts-branco (jogada-ptsB jogada-inicial))
+  (set! pts-preto (jogada-ptsP jogada-inicial))
+  ;(void (display king-is-dead)) 
+  (make-jogada (mutable-array-copy tabuleiro) jogador-atual 0 pts-branco pts-preto)
+  ;(start-new-game)
+  ;(set! continuar empty)
+)
 ; Lista de funções para as possibilidades de locomoção do Cavalo
 (define Lf-Cavalo (list (list (λ(x)(sub1 x))  (λ(y)(+ y 2)))
                         (list (λ(x)(add1 x))  (λ(y)(+ y 2)))
@@ -90,6 +105,13 @@
 
 ;Lista -> Lista
 ;Concatena as listas aninhadas vazias
+(define remove-empty-tests
+  (test-suite
+   "remove-empty tests"
+   (check-match (remove-empty (list empty (list empty))) (list empty))
+   (check-match (remove-empty (list 1 2 3 empty)) (list 1 2 3))
+   (check-match (remove-empty (list 5 6)) (list 5 6))
+   ))
 (define (remove-empty L)
   (cond
     [(empty? L) L]
@@ -151,7 +173,6 @@
 ;Simula uma jogada da IA de acordo com as regras do jogo
 (define (jogada-IA ws)
   (define tabinterno (jogada-tab ws)) ;Tabuleiro interno a ser manipulado
-
   ;Internamente, a ideia é encontrar uma posição de origem partindo de um endereço aleatório
   (define (selecionar-Origem)
     (define (percorrerTabuleiro x y)
@@ -170,7 +191,6 @@
     )
     (percorrerTabuleiro (random 0 8 (current-pseudo-random-generator)) (random 0 8 (current-pseudo-random-generator)))
   )
-
   ;Encontra uma posição-alvo dada uma origem posX através de sua Lista de Possibilidades
   (define (get-destino posX)
     (define (get-destino-interno maiorPos Lp)
@@ -183,7 +203,6 @@
   )
   (define posOrigem (selecionar-Origem))
   (make-jogada (mover-peca posOrigem (get-destino posOrigem) tabinterno) (change-player) (check-king) pts-branco pts-preto)
-  ;(make-jogada tabinterno jogador-atual kinginterno (jogada-ptsB ws) ptsinterno)
 )
 
 ;+--------------------------------------------+
@@ -212,7 +231,16 @@
   (reset-selecao-pos possibilidades-temporarias tabinterno)
 )
 
+;number number mutable-array -> Posição
 ;Verifica se uma posição está dentro dos limites do tabuleiro: se sim, retorna a Peça na posição; se não, retorna empty.
+(define get-pos-valida-tabuleiro-tests
+  (test-suite
+   "get-pos-valida-tabuleiro tests"
+   (check-match (get-pos-valida-tabuleiro 0 0 tabuleiro) A8)
+   (check-match (get-pos-valida-tabuleiro 5 6 tabuleiro) G3)
+   (check-match (get-pos-valida-tabuleiro 1 -1 tabuleiro) empty)
+   (check-match (get-pos-valida-tabuleiro 800 151 tabuleiro) empty)
+   ))
 (define (get-pos-valida-tabuleiro x y tab)
   (cond
     [(and (and(> x -1) (< x 8)) (and(> y -1) (< y 8)))
@@ -294,30 +322,48 @@
 (define get-cavalo-possibilidades-tests
   (test-suite
    "get-cavalo-possibilidades tests"
-   (check-match (get-cavalo-possibilidades C3) (list A4 B5 D5 E4))
-   (check-match (get-cavalo-possibilidades G6) (list H8 H4 E7 E5 F8 F4))
-   (check-match (get-cavalo-possibilidades A8) (list B6 C7))
-   (check-match (get-cavalo-possibilidades B2) (list A4 C4 D3))
+   (check-match (get-cavalo-possibilidades B6) (list A8 C8 D7 D5 C4 A4))
+   (check-match (get-cavalo-possibilidades G3) (list F5 H5 E4 E2 F1 H1))
+   (check-match (get-cavalo-possibilidades G8) (list F6 H6))
    ))
-;Corpo do código
 (define (get-cavalo-possibilidades posC)
   (get-unitario-possibilidades posC validar-pos-cavalo-rei Lf-Cavalo)
 )
 
 ;Posição -> Lista[Posição]
 ;Devolve uma lista de posições para onde, partindo de posR, o Rei pode se movimentar.
+(define get-rei-possibilidades-tests
+  (test-suite
+   "get-rei-possibilidades tests"
+   (check-match (get-rei-possibilidades E1) (list F1 E2 D2 D1))
+   (check-match (get-rei-possibilidades E8) empty)
+   ))
 (define (get-rei-possibilidades posR)
   (get-unitario-possibilidades posR validar-pos-cavalo-rei Lf-Rei)
 )
 
 ;Posição -> Lista[Posição]
 ;Devolve uma lista de posições para onde, partindo de posP, o Peao Branco pode se movimentar.
+(define get-peaob-possibilidades-tests
+  (test-suite
+   "get-peaob-possibilidades tests"
+   (check-match (get-peaob-possibilidades F4) (list E5))
+   (check-match (get-peaob-possibilidades C6) (list B7 D7))
+   (check-match (get-peaob-possibilidades C2) empty)
+   ))
 (define (get-peaob-possibilidades posP)
   (get-unitario-possibilidades posP validar-pos-peao Lf-Peao-B)
 )
 
 ;Posição -> Lista[Posição]
 ;Devolve uma lista de posições para onde, partindo de posP, o Peao Preto pode se movimentar.
+(define get-peaop-possibilidades-tests
+  (test-suite
+   "get-peaop-possibilidades tests"
+   (check-match (get-peaop-possibilidades C7) (list B6))
+   (check-match (get-peaop-possibilidades F7) (list E6 F6 G6))
+   (check-match (get-peaop-possibilidades E7) empty)
+   ))
 (define (get-peaop-possibilidades posP)
   (get-unitario-possibilidades posP validar-pos-peao Lf-Peao-P)
 )
@@ -327,12 +373,10 @@
 (define get-bispo-possibilidades-tests
   (test-suite
    "get-bispo-possibilidades tests"
-   (check-match (get-bispo-possibilidades C1) empty)
-   (check-match (get-bispo-possibilidades G7) (list H6 G6 E5 D4 C3 B2))
-   (check-match (get-bispo-possibilidades G3) (list H4 F4 E5 D6 C7))
-   (check-match (get-bispo-possibilidades C5) (list B6 A7 B4 A3 D6 D4 E7 E3))
+   (check-match (get-bispo-possibilidades B4) (list A5 A3 C5 D6 E7))
+   (check-match (get-bispo-possibilidades G6) (list H7 F5 E4 D3 F7 H5))
+   (check-match (get-bispo-possibilidades F8) empty)
    ))
-;Corpo do Código
 (define (get-bispo-possibilidades posB)
   (get-recursivo-possibilidades posB Lf-Bispo)
 )
@@ -342,18 +386,22 @@
 (define get-torre-possibilidades-tests
   (test-suite
     "get-torre-possibilidades tests"
-    (check-match (get-torre-possibilidades A1) empty)
-    (check-match (get-torre-possibilidades C3) (list A3 B3 D3 E3 F3 G3 H3 C4 C5 C6 C7))
-    (check-match (get-torre-possibilidades F6) (list H4 F4 E5 D6 C7))
-    (check-match (get-torre-possibilidades C5) (list B6 A7 B4 A3 D6 D4 E7 E3))
+    (check-match (get-torre-possibilidades E6) (list E7 E5 E4 E3 E2 D6 F6))
+    (check-match (get-torre-possibilidades C3) (list C4 C5 A3 B3 D3 E3 F3))
+    (check-match (get-torre-possibilidades H8) empty)
     ))
-;Corpo do Código
 (define (get-torre-possibilidades posT)
   (get-recursivo-possibilidades posT Lf-Torre)
 )
 
 ;Posição -> Lista[Posição]
 ;Devolve uma lista de posições para onde, partindo de posR, a Rainha pode se movimentar.
+(define get-rainha-possibilidades-tests
+  (test-suite
+    "get-rainha-possibilidades tests"
+    (check-match (get-rainha-possibilidades D4) (list D6 D5 D3 D2 D1 C5 E3 G7 F6 E5 C4 E4 D7))
+    (check-match (get-rainha-possibilidades D8) empty)
+    ))
 (define (get-rainha-possibilidades posR)
   (remove-empty (append (get-bispo-possibilidades posR) (get-torre-possibilidades posR)))
 )
@@ -386,7 +434,7 @@
   (if (even? (+ (pos-x posX) (pos-y posX))) branco preto)
 )
 
-;Lista -> void
+;Lista -> mutable-array
 ;Altera a a propriedade destinavel das peças em Lp para vf
 (define (change-selecao-pos Lp vf tab)
   (cond
@@ -400,13 +448,13 @@
    ]
 ))
 
-;Lista -> void
+;Lista -> mutable-array
 ;Altera a a propriedade destinavel das peças em Lp para #f
 (define (reset-selecao-pos Lp tab)
   (change-selecao-pos Lp #f tab)
 )
 
-;Lista -> void
+;Lista -> mutable-array
 ;Altera a a propriedade destinavel das peças em Lp para #t
 (define (make-selecao-pos Lp tab)
   (change-selecao-pos Lp #t tab)
@@ -471,12 +519,6 @@
   (array-ref tabuleiro (vector x y)))
 )
 
-;mutable-array jogador number number number -> jogada (world)
-;Cria uma jogada (world) com os atributos
-(define (make-jogada newTabuleiro newJogador newKing newPb newPp)
-  (jogada newTabuleiro newJogador newKing newPb newPp)
-)
-
 ;void -> number
 ;Retorna o jogador atual
 (define (get-jogador)
@@ -488,7 +530,7 @@
 (define (check-king)
   king-is-dead)
 
-;jogada number number string -> void
+;jogada number number string -> jogada
 ;Manipula um evento de mouse (MouseEvent) nas coordenadas x y
 (define (mouse-handler ws x y event)
   (cond [(and (not (empty? jogadorIA))(equal? (jogada-jogador ws) jogadorIA)) ws]
@@ -512,7 +554,7 @@
                   ))) ws) ws)
             )
            ; Jogador selecionando o destino
-             (if (memf (lambda (x) (and (equal? (pos-x posClicada) (pos-x x)) (equal? (pos-y posClicada) (pos-y x)))) possibilidades-temporarias)
+             (if (memf (λ(x)(and (equal? (pos-x posClicada) (pos-x x)) (equal? (pos-y posClicada) (pos-y x)))) possibilidades-temporarias)
                  (make-jogada (mover-peca posicao-origem posClicada (jogada-tab ws)) (change-player) (check-king) pts-branco pts-preto);Posição válida
                  ws;Posição inválida
              )
@@ -521,18 +563,33 @@
         [else ws])
   )
 
+;jogada string -> jogada
+(define (key-handler w key)
+ (cond
+   [(key=? key "\r")
+    (cond [(equal? (jogada-king w) 1) (set-jogada-as-inicial w)])
+   ]
+  )
+  w
+)
+
+
 ;jogada -> image
 ;Desenha a interface gráfica do usuário
 (define (desenhar-gui w)
+  (void (display (jogada-king w)))
   (if (zero? (jogada-king w))
     (place-images
      (generate-layout w)
      (generate-posn)
      layout
     )
-    (make-end-screen w))
+    (make-end-screen w)
+  )
 )
 
+;jogada -> Jogada
+;Caso a IA esteja habilitada, faz uma jogada
 (define (vez-da-IA w)
   (if (equal? (jogada-jogador w) jogadorIA)
     (jogada-IA w)
@@ -540,15 +597,40 @@
   )
 )
 
+(define (stop-world w)
+  (cond
+    [(empty? continuar) #t]
+    [else #f]
+  )
+)
+
+;void -> universe
+;Inicia um novo jogo
 (define (start-new-game)
   (big-bang (make-jogada tabuleiro jogador-atual king-is-dead pts-branco pts-preto)
-    (to-draw desenhar-gui)
+    (on-key   key-handler)
+    (to-draw  desenhar-gui)
     (on-mouse mouse-handler)
-    (on-tick vez-da-IA)
-    (name "Xadrez"))
+    (on-tick  vez-da-IA)
+    (name     "Xadrez")
+    )
 )
 
 (start-new-game)
+;+--------------------------------------------+
+;|                Tela Inicial                |
+;+--------------------------------------------+
+
+;(define (desenhar-tela-inicial w)
+;  (read (current-input-port))
+;)
+
+;(start-new-game)
+;(big-bang jogadores
+;  (to-draw desenhar-tela-inicial)
+;  ;(on-mouse mouse-handler)
+;  ;(on-tick vez-da-IA)
+;  (name "Insira seu nome"))
 
 ;+--------------------------------------------+
 ;|             Execução de Testes             |
@@ -559,10 +641,16 @@
 ;(define (executa-testes . testes)
 ;  (run-tests (test-suite "Todos os testes" testes))
 ;  (void))
-
-; Chama a função para executar os testes.
+;
+;;; Chama a função para executar os testes.
 ;(executa-testes
+;  remove-empty-tests
+;  get-pos-valida-tabuleiro-tests
+;  get-peaop-possibilidades-tests
+;  get-peaob-possibilidades-tests
+;  get-torre-possibilidades-tests
 ;  get-cavalo-possibilidades-tests
 ;  get-bispo-possibilidades-tests
-;  get-torre-possibilidades-tests
+;  get-rainha-possibilidades-tests
+;  get-rei-possibilidades-tests
 ;)

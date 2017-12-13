@@ -20,7 +20,7 @@ Segundo Trabalho de Paradigma de Programação Lógica e Funcional
   - [ ] Tela final
   - [ ] Ranking
   - [ ] Sistema de Jogadores
-- [ ] Testes
-  - [ ] Documentação de CADA função
-  - [ ] Testes de CADA função
+- [x] Testes
+  - [x] Documentação de CADA função
+  - [x] Testes de CADA função
 - [x] IA
