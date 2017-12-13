@@ -537,7 +537,7 @@
   (big-bang (make-jogada tabuleiro jogador-atual king-is-dead pts-branco pts-preto)
     (to-draw desenhar-gui)
     (on-mouse mouse-handler)
-    (on-tick vez-da-IA)
+    ;(on-tick vez-da-IA)
     (name "Xadrez"))
 )
 
