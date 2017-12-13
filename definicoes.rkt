@@ -10,8 +10,8 @@
 ;Definições de cores
 (define preto (make-color 0 0 0 75)) ;Cor preta
 (define branco "white") ;Cor branca
-(define verde (make-color 0 255 0 90)) ;Cor verde
-(define btn-bar-color (make-color 255 0 255 75)) ;Cor preta
+(define verde "MediumSeaGreen") ;Cor verde
+(define btn-bar-color "RoyalBlue") ;Cor da barra inferior
 
 ;Definições do Tabuleiro
 (define Lpar-xy (cartesian-product (range 8) (range 8))) ;Lista de pares ordenados com as posições possíveis
@@ -24,12 +24,43 @@
 
 ;Definições do Layout
 (define layout (empty-scene lado-tabuleiro (+ lado-tabuleiro altura-bottombar))) ;Dimensão do Layout (tela do jogo)
+(define pic-gameover (bitmap "imagens/game_over.png")) ;Imagem da tela de fim de jogo
 
+;Estrutura que define uma jogada (World)
+(struct jogada (tab jogador king ptsB ptsP))
 
-(define (bottom-bar placarB placarP)
-  (underlay/align "center" "center"
-    (rectangle largura-bottombar altura-bottombar "solid" btn-bar-color)
-    (text (string-append "Brancos " (number->string placarB) " x " (number->string placarP) " Pretos") 24 preto)
+(struct jogador (nome vitorias cor))
+
+;color -> string
+(define (get-nome player)
+  (cond
+    [(equal? player branco) "BRANCO"]
+    [(equal? player preto) "PRETO"]
+  )
+)
+
+;number number jogador -> image
+;Gera uma bottom-bar com as informações
+(define (bottom-bar placarB placarP player)
+  (underlay/align "left" "bottom"
+    (underlay/align "center" "center"
+      (rectangle largura-bottombar altura-bottombar "solid" btn-bar-color)
+      (text (string-append "Brancos " (number->string placarB) " x " (number->string placarP) " Pretos") 24 "black")
+    )
+    (text (string-append " Vez do jogador " (get-nome player)) 18 "black")
+  )
+)
+
+;jogada -> image
+;Cria a tela de fim de jogo
+(define (make-end-screen partida)
+  (underlay/align "center" "bottom"
+    (underlay/align "center" "center"
+      (rectangle lado-tabuleiro (+ lado-tabuleiro altura-bottombar) "solid" "black")
+      pic-gameover
+    )
+    (text/font (string-append " Vitória do Jogador " (get-nome (jogada-jogador partida)) "\n Contagem de peças destruídas \n" (number->string (jogada-ptsB partida)) " brancas\t" (number->string (jogada-ptsP partida)) " pretas")
+          30 branco "Gill Sans" 'swiss 'normal 'bold #f)
   )
 )
 
@@ -106,39 +137,9 @@
 ;Configuração do Tabuleiro
 (define A8 (pos 0 0 #f tP0))    (define B8 (pos 0 1 #f cP0))    (define C8 (pos 0 2 #f bP0))    (define D8 (pos 0 3 #f qP0))    (define E8 (pos 0 4 #f kP0))    (define F8 (pos 0 5 #f bP1))    (define G8 (pos 0 6 #f cP1))    (define H8 (pos 0 7 #f tP1))
 (define A7 (pos 1 0 #f pP0))    (define B7 (pos 1 1 #f pP1))    (define C7 (pos 1 2 #f pP2))    (define D7 (pos 1 3 #f pP3))    (define E7 (pos 1 4 #f pP4))    (define F7 (pos 1 5 #f pP5))    (define G7 (pos 1 6 #f pP6))    (define H7 (pos 1 7 #f pP7))
-(define A6 (pos 2 0 #f empty))  (define B6 (pos 2 1 #f empty))  (define C6 (pos 2 2 #f pB0))  (define D6 (pos 2 3 #f pP0))  (define E6 (pos 2 4 #f empty))  (define F6 (pos 2 5 #f empty))  (define G6 (pos 2 6 #f empty))  (define H6 (pos 2 7 #f empty))
+(define A6 (pos 2 0 #f empty))  (define B6 (pos 2 1 #f empty))  (define C6 (pos 2 2 #f empty))  (define D6 (pos 2 3 #f empty))  (define E6 (pos 2 4 #f empty))  (define F6 (pos 2 5 #f empty))  (define G6 (pos 2 6 #f empty))  (define H6 (pos 2 7 #f empty))
 (define A5 (pos 3 0 #f empty))  (define B5 (pos 3 1 #f empty))  (define C5 (pos 3 2 #f empty))  (define D5 (pos 3 3 #f empty))  (define E5 (pos 3 4 #f empty))  (define F5 (pos 3 5 #f empty))  (define G5 (pos 3 6 #f empty))  (define H5 (pos 3 7 #f empty))
 (define A4 (pos 4 0 #f empty))  (define B4 (pos 4 1 #f empty))  (define C4 (pos 4 2 #f empty))  (define D4 (pos 4 3 #f empty))  (define E4 (pos 4 4 #f empty))  (define F4 (pos 4 5 #f empty))  (define G4 (pos 4 6 #f empty))  (define H4 (pos 4 7 #f empty))
 (define A3 (pos 5 0 #f empty))  (define B3 (pos 5 1 #f empty))  (define C3 (pos 5 2 #f empty))  (define D3 (pos 5 3 #f empty))  (define E3 (pos 5 4 #f empty))  (define F3 (pos 5 5 #f empty))  (define G3 (pos 5 6 #f empty))  (define H3 (pos 5 7 #f empty))
 (define A2 (pos 6 0 #f pB0))    (define B2 (pos 6 1 #f pB1))    (define C2 (pos 6 2 #f pB2))    (define D2 (pos 6 3 #f pB3))    (define E2 (pos 6 4 #f pB4))    (define F2 (pos 6 5 #f pB5))    (define G2 (pos 6 6 #f pB6))    (define H2 (pos 6 7 #f pB7))
 (define A1 (pos 7 0 #f tB0))    (define B1 (pos 7 1 #f cB0))    (define C1 (pos 7 2 #f bB0))    (define D1 (pos 7 3 #f qB0))    (define E1 (pos 7 4 #f kB0))    (define F1 (pos 7 5 #f bB1))    (define G1 (pos 7 6 #f cB1))    (define H1 (pos 7 7 #f tB1))
-
-;CAVALO
-;(define A8 (pos 0 0 #f cB1))    (define B8 (pos 0 1 #f cP0))     (define C8 (pos 0 2 #f bP0))    (define D8 (pos 0 3 #f qP0))     (define E8 (pos 0 4 #f kP0))    (define F8 (pos 0 5 #f bP1))     (define G8 (pos 0 6 #f cP1))    (define H8 (pos 0 7 #f tP1))
-;(define A7 (pos 1 0 #f pP0))     (define B7 (pos 1 1 #f pP1))    (define C7 (pos 1 2 #f pP2))     (define D7 (pos 1 3 #f pP3))    (define E7 (pos 1 4 #f pP4))     (define F7 (pos 1 5 #f pP5))    (define G7 (pos 1 6 #f pP6))     (define H7 (pos 1 7 #f pP7))
-;(define A6 (pos 2 0 #f empty))  (define B6 (pos 2 1 #f empty))   (define C6 (pos 2 2 #f empty))  (define D6 (pos 2 3 #f empty))   (define E6 (pos 2 4 #f empty))  (define F6 (pos 2 5 #f empty))   (define G6 (pos 2 6 #f cB0))  (define H6 (pos 2 7 #f empty))
-;(define A5 (pos 3 0 #f empty))   (define B5 (pos 3 1 #f empty))  (define C5 (pos 3 2 #f empty))   (define D5 (pos 3 3 #f empty))  (define E5 (pos 3 4 #f empty))   (define F5 (pos 3 5 #f empty))  (define G5 (pos 3 6 #f empty))   (define H5 (pos 3 7 #f empty))
-;(define A4 (pos 4 0 #f empty))  (define B4 (pos 4 1 #f empty))   (define C4 (pos 4 2 #f empty))  (define D4 (pos 4 3 #f empty))   (define E4 (pos 4 4 #f empty))  (define F4 (pos 4 5 #f empty))   (define G4 (pos 4 6 #f empty))  (define H4 (pos 4 7 #f empty))
-;(define A3 (pos 5 0 #f empty))   (define B3 (pos 5 1 #f empty))  (define C3 (pos 5 2 #f cB0))   (define D3 (pos 5 3 #f empty))  (define E3 (pos 5 4 #f empty))   (define F3 (pos 5 5 #f empty))  (define G3 (pos 5 6 #f empty))   (define H3 (pos 5 7 #f empty))
-;(define A2 (pos 6 0 #f pB0))    (define B2 (pos 6 1 #f cB1))     (define C2 (pos 6 2 #f pB2))    (define D2 (pos 6 3 #f pB3))     (define E2 (pos 6 4 #f pB4))    (define F2 (pos 6 5 #f pB5))     (define G2 (pos 6 6 #f pB6))    (define H2 (pos 6 7 #f pB7))
-;(define A1 (pos 7 0 #f tB0))     (define B1 (pos 7 1 #f cB0))    (define C1 (pos 7 2 #f bB0))     (define D1 (pos 7 3 #f qB0))    (define E1 (pos 7 4 #f kB0))     (define F1 (pos 7 5 #f bB1))    (define G1 (pos 7 6 #f cB1))     (define H1 (pos 7 7 #f tB1))
-
-;BISPO
-;(define A8 (pos 0 0 #f tP0))    (define B8 (pos 0 1 #f cP0))     (define C8 (pos 0 2 #f bP0))    (define D8 (pos 0 3 #f qP0))     (define E8 (pos 0 4 #f kP0))    (define F8 (pos 0 5 #f bP1))     (define G8 (pos 0 6 #f cP1))    (define H8 (pos 0 7 #f tP1))
-;(define A7 (pos 1 0 #f pP0))     (define B7 (pos 1 1 #f pP1))    (define C7 (pos 1 2 #f pP2))     (define D7 (pos 1 3 #f pP3))    (define E7 (pos 1 4 #f pP4))     (define F7 (pos 1 5 #f pP5))    (define G7 (pos 1 6 #f bP0))     (define H7 (pos 1 7 #f pP7))
-;(define A6 (pos 2 0 #f empty))  (define B6 (pos 2 1 #f empty))   (define C6 (pos 2 2 #f empty))  (define D6 (pos 2 3 #f empty))   (define E6 (pos 2 4 #f empty))  (define F6 (pos 2 5 #f empty))   (define G6 (pos 2 6 #f empty))  (define H6 (pos 2 7 #f empty))
-;(define A5 (pos 3 0 #f empty))   (define B5 (pos 3 1 #f empty))  (define C5 (pos 3 2 #f bB0))   (define D5 (pos 3 3 #f empty))  (define E5 (pos 3 4 #f empty))   (define F5 (pos 3 5 #f empty))  (define G5 (pos 3 6 #f empty))   (define H5 (pos 3 7 #f empty))
-;(define A4 (pos 4 0 #f empty))  (define B4 (pos 4 1 #f empty))   (define C4 (pos 4 2 #f empty))  (define D4 (pos 4 3 #f empty))   (define E4 (pos 4 4 #f empty))  (define F4 (pos 4 5 #f empty))   (define G4 (pos 4 6 #f empty))  (define H4 (pos 4 7 #f empty))
-;(define A3 (pos 5 0 #f empty))   (define B3 (pos 5 1 #f empty))  (define C3 (pos 5 2 #f empty))   (define D3 (pos 5 3 #f empty))  (define E3 (pos 5 4 #f empty))   (define F3 (pos 5 5 #f empty))  (define G3 (pos 5 6 #f bB0))   (define H3 (pos 5 7 #f empty))
-;(define A2 (pos 6 0 #f pB0))    (define B2 (pos 6 1 #f pB1))     (define C2 (pos 6 2 #f pB2))    (define D2 (pos 6 3 #f pB3))     (define E2 (pos 6 4 #f pB4))    (define F2 (pos 6 5 #f pB5))     (define G2 (pos 6 6 #f pB6))    (define H2 (pos 6 7 #f pB7))
-;(define A1 (pos 7 0 #f tB0))     (define B1 (pos 7 1 #f cB0))    (define C1 (pos 7 2 #f bB0))     (define D1 (pos 7 3 #f qB0))    (define E1 (pos 7 4 #f kB0))     (define F1 (pos 7 5 #f bB1))    (define G1 (pos 7 6 #f cB1))     (define H1 (pos 7 7 #f tB1))
-
-;Torre
-;(define A8 (pos 0 0 #f tP0))    (define B8 (pos 0 1 #f cP0))     (define C8 (pos 0 2 #f bP0))    (define D8 (pos 0 3 #f qP0))     (define E8 (pos 0 4 #f kP0))    (define F8 (pos 0 5 #f bP1))     (define G8 (pos 0 6 #f cP1))    (define H8 (pos 0 7 #f tP1))
-;(define A7 (pos 1 0 #f pP0))     (define B7 (pos 1 1 #f pP1))    (define C7 (pos 1 2 #f pP2))     (define D7 (pos 1 3 #f pP3))    (define E7 (pos 1 4 #f pP4))     (define F7 (pos 1 5 #f pP5))    (define G7 (pos 1 6 #f pP6))     (define H7 (pos 1 7 #f pP7))
-;(define A6 (pos 2 0 #f empty))  (define B6 (pos 2 1 #f empty))   (define C6 (pos 2 2 #f empty))  (define D6 (pos 2 3 #f empty))   (define E6 (pos 2 4 #f empty))  (define F6 (pos 2 5 #f tP1))   (define G6 (pos 2 6 #f empty))  (define H6 (pos 2 7 #f empty))
-;(define A5 (pos 3 0 #f empty))   (define B5 (pos 3 1 #f empty))  (define C5 (pos 3 2 #f empty))   (define D5 (pos 3 3 #f empty))  (define E5 (pos 3 4 #f empty))   (define F5 (pos 3 5 #f empty))  (define G5 (pos 3 6 #f empty))   (define H5 (pos 3 7 #f empty))
-;(define A4 (pos 4 0 #f empty))  (define B4 (pos 4 1 #f empty))   (define C4 (pos 4 2 #f empty))  (define D4 (pos 4 3 #f empty))   (define E4 (pos 4 4 #f empty))  (define F4 (pos 4 5 #f empty))   (define G4 (pos 4 6 #f empty))  (define H4 (pos 4 7 #f empty))
-;(define A3 (pos 5 0 #f empty))   (define B3 (pos 5 1 #f empty))  (define C3 (pos 5 2 #f tB0))   (define D3 (pos 5 3 #f empty))  (define E3 (pos 5 4 #f empty))   (define F3 (pos 5 5 #f empty))  (define G3 (pos 5 6 #f empty))   (define H3 (pos 5 7 #f empty))
-;(define A2 (pos 6 0 #f pB0))    (define B2 (pos 6 1 #f pB1))     (define C2 (pos 6 2 #f pB2))    (define D2 (pos 6 3 #f pB3))     (define E2 (pos 6 4 #f pB4))    (define F2 (pos 6 5 #f pB5))     (define G2 (pos 6 6 #f pB6))    (define H2 (pos 6 7 #f pB7))
-;(define A1 (pos 7 0 #f tB0))     (define B1 (pos 7 1 #f cB0))    (define C1 (pos 7 2 #f bB0))     (define D1 (pos 7 3 #f qB0))    (define E1 (pos 7 4 #f kB0))     (define F1 (pos 7 5 #f bB1))    (define G1 (pos 7 6 #f cB1))     (define H1 (pos 7 7 #f tB1))

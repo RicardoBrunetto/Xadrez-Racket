@@ -14,10 +14,12 @@ Segundo Trabalho de Paradigma de Programação Lógica e Funcional
   - [x] Plot das peças
   - [x] Mouse event handler
   - [x] Plot das possibilidades de movimento    
-  - [ ] Barra inferior
+  - [x] Barra inferior
     - [x] Placar
-    - [ ] Jogador corrente
+    - [x] Jogador corrente  
   - [ ] Tela final
+  - [ ] Ranking
+  - [ ] Sistema de Jogadores
 - [ ] Testes
   - [ ] Documentação de CADA função
   - [ ] Testes de CADA função

@@ -28,6 +28,8 @@
 ;+--------------------------------------------+
 ;|                 Definições                 |
 ;+--------------------------------------------+
+(define jogadorIA preto) ;Define quem é o jogador IA
+(define jogadorHumano branco) ;Define quem é o jogador Humano
 (define select 0) ;Variável para controlar os cliques (selecionar origem = 0 / selecionar destino = 1)
 (define jogador-atual branco) ;Define quem é o jogador atual
 (define possibilidades-temporarias empty) ;Lista de possibilidades de locomoção temporárias
@@ -35,9 +37,6 @@
 (define king-is-dead 0) ;Variável que atesta que ambos reis estão vivos (0) ou algum está morto (1)
 (define pts-branco 0) ;Placar do jogador branco
 (define pts-preto 0) ;Placar do jogador preto
-
-(struct uorde (tab jogador king ptsB ptsP))
-
 ;Definição do Tabuleiro (configuração inicial no arquivo definicoes.rkt)
 (define tabuleiro (mutable-array #[#[A8 B8 C8 D8 E8 F8 G8 H8]
                                    #[A7 B7 C7 D7 E7 F7 G7 H7]
@@ -118,13 +117,81 @@
   jogador-atual
 )
 
+;Posicao -> number
+;Retorna o valor de pontos da peça contida na posição posX
+(define (get-pontos-pos posX)
+  (cond
+    [(empty? posX) -1]
+    [(empty? (pos-peca posX)) 0]
+    [(empty? (pos-peca posX)) 0]
+    [else
+      (let ([tipo (peca-tipo (pos-peca posX))])
+        (cond
+          [(equal? tipo "peao") 1]
+          [(equal? tipo "torre") 3]
+          [(equal? tipo "cavalo") 5]
+          [(equal? tipo "bispo") 7]
+          [(equal? tipo "rainha") 10]
+          [(equal? tipo "rei") 15]
+   ))])
+)
+
+;Posicao Posicao -> Posicao
+;Retorna a Posição de maior valor entre posX e posY
+(define (get-maior-pos posX posY)
+  (if (> (get-pontos-pos posX) (get-pontos-pos posY)) posX posY)
+)
+
+;+--------------------------------------------+
+;|           Inteligência Artificial          |
+;+--------------------------------------------+
+
+;jogada -> jogada
+;Simula uma jogada da IA de acordo com as regras do jogo
+(define (jogada-IA ws)
+  (define tabinterno (jogada-tab ws)) ;Tabuleiro interno a ser manipulado
+
+  ;Internamente, a ideia é encontrar uma posição de origem partindo de um endereço aleatório
+  (define (selecionar-Origem)
+    (define (percorrerTabuleiro x y)
+      (define posEncontrada (get-pos-valida-tabuleiro x y tabinterno))
+      (cond
+        [(empty? (pos-peca posEncontrada)) ;Caso a posição encontrada não seja válida (não tem peça), tenta com números aleatórios novamente
+          (percorrerTabuleiro (random 0 8 (current-pseudo-random-generator)) (random 0 8 (current-pseudo-random-generator)))]
+        [else ;Caso tenha encontrado uma válida, confere se é do jogador
+          (if (equal? (peca-cor (pos-peca posEncontrada)) jogador-atual)
+              (if (empty? (get-possibilidades-peca posEncontrada)) ;Não há como mover a peça
+                  (percorrerTabuleiro (random 0 8 (current-pseudo-random-generator)) (random 0 8 (current-pseudo-random-generator)))
+                  posEncontrada
+              )
+              (percorrerTabuleiro (random 0 8 (current-pseudo-random-generator)) (random 0 8 (current-pseudo-random-generator)))
+      )])
+    )
+    (percorrerTabuleiro (random 0 8 (current-pseudo-random-generator)) (random 0 8 (current-pseudo-random-generator)))
+  )
+
+  ;Encontra uma posição-alvo dada uma origem posX através de sua Lista de Possibilidades
+  (define (get-destino posX)
+    (define (get-destino-interno maiorPos Lp)
+      (cond
+        [(empty? Lp) maiorPos]
+        [else (get-destino-interno (get-maior-pos (first Lp) maiorPos) (rest Lp))]
+      )
+    )
+    (get-destino-interno empty (get-possibilidades-peca posX))
+  )
+  (define posOrigem (selecionar-Origem))
+  (make-jogada (mover-peca posOrigem (get-destino posOrigem) tabinterno) (change-player) (check-king) pts-branco pts-preto)
+  ;(make-jogada tabinterno jogador-atual kinginterno (jogada-ptsB ws) ptsinterno)
+)
+
 ;+--------------------------------------------+
 ;|            Manipulação das Peças           |
 ;+--------------------------------------------+
 
-;Peca -> Tabuleiro
-;Retorna um novo tabuleiro onde p1 assumiu o lugar de p2 e p2 está fora do jogo
-(define (mover-peca p1 p2)
+;Peca Peca Jogada -> Tabuleiro
+;Retorna um novo tabuleiro onde p1 assumiu o lugar de p2 e p2 está fora da Jogada
+(define (mover-peca p1 p2 tabinterno)
   (void
    (cond
      [(empty? (pos-peca p2)) void]
@@ -132,17 +199,16 @@
       (if (equal? (peca-tipo (pos-peca p2)) "rei")
           (set! king-is-dead 1)
           (if(equal? jogador-atual branco)
-            (set! pts-branco (add1 pts-branco))
-            (set! pts-preto (add1 pts-preto))
+            (set! pts-branco (+ pts-branco (get-pontos-pos p2)))
+            (set! pts-preto (+ pts-preto (get-pontos-pos p2)))
           )
           )])
    (set! p2 (struct-copy pos p2[peca (pos-peca p1)] [destinavel #f]))
    (set! p1 (struct-copy pos p1[peca empty]))
    (set! select 0)
-   (reset-selecao-pos possibilidades-temporarias)
-   (array-set! tabuleiro (vector (pos-x p2) (pos-y p2)) p2)
-   (array-set! tabuleiro (vector (pos-x p1) (pos-y p1)) p1))
-  tabuleiro
+   (array-set! tabinterno (vector (pos-x p2) (pos-y p2)) p2)
+   (array-set! tabinterno (vector (pos-x p1) (pos-y p1)) p1))
+  (reset-selecao-pos possibilidades-temporarias tabinterno)
 )
 
 ;Verifica se uma posição está dentro dos limites do tabuleiro: se sim, retorna a Peça na posição; se não, retorna empty.
@@ -310,7 +376,6 @@
   )
 )
 
-
 ;+--------------------------------------------+
 ;|              Interface Gráfica             |
 ;+--------------------------------------------+
@@ -322,28 +387,28 @@
 
 ;Lista -> void
 ;Altera a a propriedade destinavel das peças em Lp para vf
-(define (change-selecao-pos Lp vf)
+(define (change-selecao-pos Lp vf tab)
   (cond
-    [(empty? Lp) tabuleiro]
+    [(empty? Lp) tab]
     [else (and
       (void
-      (let ([posR (first Lp)])
+      (let ([posR (get-pos-valida-tabuleiro (pos-x (first Lp)) (pos-y (first Lp)) tab)])
       (set! posR (struct-copy pos posR[destinavel vf]))
-      (array-set! tabuleiro (vector (pos-x posR) (pos-y posR)) posR)))
-      (change-selecao-pos (rest Lp) vf))
+      (array-set! tab (vector (pos-x posR) (pos-y posR)) posR)))
+      (change-selecao-pos (rest Lp) vf tab))
    ]
 ))
 
 ;Lista -> void
 ;Altera a a propriedade destinavel das peças em Lp para #f
-(define (reset-selecao-pos Lp)
-  (change-selecao-pos Lp #f)
+(define (reset-selecao-pos Lp tab)
+  (change-selecao-pos Lp #f tab)
 )
 
 ;Lista -> void
 ;Altera a a propriedade destinavel das peças em Lp para #t
-(define (make-selecao-pos Lp)
-  (change-selecao-pos Lp #t)
+(define (make-selecao-pos Lp tab)
+  (change-selecao-pos Lp #t tab)
 )
 
 ;Peca -> image
@@ -378,11 +443,11 @@
     (cond
       [(empty? Lp) Lpos]
       [else
-       (define posX (get-pos-valida-tabuleiro (first (first Lp)) (second (first Lp)) (uorde-tab w)))
+       (define posX (get-pos-valida-tabuleiro (first (first Lp)) (second (first Lp)) (jogada-tab w)))
        (generate-layout-interno  (rest Lp) (cons (make-celula (get-background-pos posX) posX) Lpos))
       ]
   ))
-  (append (generate-layout-interno Lpar-xy empty) (list (bottom-bar (uorde-ptsB w) (uorde-ptsP w))))
+  (append (generate-layout-interno Lpar-xy empty) (list (bottom-bar (jogada-ptsB w) (jogada-ptsP w) (jogada-jogador w))))
 )
 
 ;void -> Lista[posn]
@@ -405,8 +470,8 @@
   (array-ref tabuleiro (vector x y)))
 )
 
-(define (make-uorde t j k pb pp)
-  (uorde t j k pb pp)
+(define (make-jogada t j k pb pp)
+  (jogada t j k pb pp)
 )
 
 (define (get-jogador)
@@ -416,17 +481,18 @@
 (define (check-king)
   king-is-dead)
 
-;world number number string -> void
+;jogada number number string -> void
 ;Manipula um evento de mouse (MouseEvent) nas coordenadas x y
 (define (mouse-handler ws x y event)
-  (cond [(string=? event "button-down")
+  (cond [(equal? (jogada-jogador ws) jogadorIA) ws]
+        [(string=? event "button-down")
          (let ([posClicada (get-pos-at (quotient y 100) (quotient x 100))])
            (if (empty? posClicada) ws
            (if (zero? select)
            ;Jogador selecionando a origem
              (if (empty? (pos-peca posClicada))
                  ws
-                 (if(equal? (peca-cor (pos-peca posClicada)) (uorde-jogador ws))
+                 (if(equal? (peca-cor (pos-peca posClicada)) (jogada-jogador ws))
                   (and (void
                   (set! possibilidades-temporarias
                         (get-possibilidades-peca posClicada))
@@ -434,13 +500,13 @@
                     (set! possibilidades-temporarias empty)
                     (void
                       (set! posicao-origem posClicada)
-                      (make-selecao-pos possibilidades-temporarias)
+                      (make-selecao-pos possibilidades-temporarias (jogada-tab ws))
                       (set! select 1)
                   ))) ws) ws)
             )
            ; Jogador selecionando o destino
              (if (memf (lambda (x) (and (equal? (pos-x posClicada) (pos-x x)) (equal? (pos-y posClicada) (pos-y x)))) possibilidades-temporarias)
-                 (make-uorde (mover-peca posicao-origem posClicada) (change-player) (check-king) pts-branco pts-preto);Posição válida
+                 (make-jogada (mover-peca posicao-origem posClicada (jogada-tab ws)) (change-player) (check-king) pts-branco pts-preto);Posição válida
                  ws;Posição inválida
              )
            )))
@@ -448,22 +514,30 @@
         [else ws])
   )
 
-;World -> image
+;jogada -> image
 ;Desenha a interface gráfica do usuário
 (define (desenhar-gui w)
-  (if (zero? (uorde-king w))
+  (if (zero? (jogada-king w))
     (place-images
      (generate-layout w)
      (generate-posn)
      layout
     )
-    (text "ACABOOOOOOOU" 24 "orange"))
+    (make-end-screen w))
+)
+
+(define (vez-da-IA w)
+  (if (equal? (jogada-jogador w) jogadorIA)
+    (jogada-IA w)
+    w
+  )
 )
 
 (define (start-new-game)
-  (big-bang (make-uorde tabuleiro jogador-atual king-is-dead pts-branco pts-preto)
+  (big-bang (make-jogada tabuleiro jogador-atual king-is-dead pts-branco pts-preto)
     (to-draw desenhar-gui)
     (on-mouse mouse-handler)
+    (on-tick vez-da-IA)
     (name "Xadrez"))
 )
 
