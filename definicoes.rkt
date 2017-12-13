@@ -37,14 +37,14 @@
 ;Estrutura que define um jogador
 (struct jogador (nome pontos cor))
 
-;color -> string
-;Retorna o nome do jogador
-(define (get-nome player)
-  (cond
-    [(equal? player branco) "BRANCO"]
-    [(equal? player preto) "PRETO"]
-  )
-)
+;;color -> string
+;;Retorna o nome do jogador
+;(define (get-nome player)
+;  (cond
+;    [(equal? player branco) "BRANCO"]
+;    [(equal? player preto) "PRETO"]
+;  )
+;)
 
 ;number number jogador number -> image
 ;Gera uma bottom-bar com as informações
@@ -55,7 +55,7 @@
         (rectangle largura-bottombar altura-bottombar "solid" btn-bar-color)
         (text (string-append "Brancos " (number->string placarB) " x " (number->string placarP) " Pretos") 24 "white")
       )
-      (text (string-append " Vez do jogador " (get-nome player)) 18 "white")
+      (text (string-append " Vez do jogador " (jogador-nome player)) 18 "white")
     )
     (text (string-append (number->string movimentos) " Movimentos") 18 "white")
   )

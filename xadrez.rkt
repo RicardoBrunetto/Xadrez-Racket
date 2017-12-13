@@ -28,11 +28,11 @@
 ;+--------------------------------------------+
 ;|                 Definições                 |
 ;+--------------------------------------------+
-(define jogadores empty)
 (define ranking empty)
-(define jogadorIA preto) ;Define quem é o jogador IA
-(define jogadorIA-dois empty) ;Define quem é o jogador IA
-(define jogadorHumano branco) ;Define quem é o jogador Humano
+(define jogadorIA empty) ;Define quem é o jogador IA 1
+(define jogadorIA-dois empty) ;Define quem é o jogador IA 2
+(define jogadorHumano empty) ;Define quem é o jogador Humano
+(define nomeJogador "Humano") ;Define o nome do jogador humano
 (define select 0) ;Variável para controlar os cliques (selecionar origem = 0 / selecionar destino = 1)
 (define movimentos 0) ;Variável para contar os movimentos
 (define jogador-atual branco) ;Define quem é o jogador atual
@@ -125,9 +125,9 @@
 ;Altera a vez de quem está jogando, retornando-a.
 (define (change-player)
   (set! movimentos (add1 movimentos))
-  (if (equal? jogador-atual branco)
-      (set! jogador-atual preto)
-      (set! jogador-atual branco))
+  (if (equal? (jogador-cor jogador-atual) branco)
+      (set! (jogador-cor jogador-atual) preto)
+      (set! (jogador-cor jogador-atual) branco))
   jogador-atual
 )
 
@@ -172,7 +172,7 @@
         [(empty? (pos-peca posEncontrada)) ;Caso a posição encontrada não seja válida (não tem peça), tenta com números aleatórios novamente
           (percorrerTabuleiro (random 0 8 (current-pseudo-random-generator)) (random 0 8 (current-pseudo-random-generator)))]
         [else ;Caso tenha encontrado uma válida, confere se é do jogador
-          (if (equal? (peca-cor (pos-peca posEncontrada)) jogador-atual)
+          (if (equal? (peca-cor (pos-peca posEncontrada)) (jogador-cor jogador-atual))
               (if (empty? (get-possibilidades-peca posEncontrada)) ;Não há como mover a peça
                   (percorrerTabuleiro (random 0 8 (current-pseudo-random-generator)) (random 0 8 (current-pseudo-random-generator)))
                   posEncontrada
@@ -209,9 +209,9 @@
      [else
       (cond [(equal? (peca-tipo (pos-peca p2)) "rei")
               (set! king-is-dead 1)]
-            [(equal? jogador-atual branco)
+            [(equal? (jogador-cor jogador-atual) branco)
              (set! pts-branco (+ pts-branco (get-pontos-pos p2)))]
-            [(equal? jogador-atual preto)
+            [(equal? (jogador-cor jogador-atual) preto)
              (set! pts-preto (+ pts-preto (get-pontos-pos p2)))]
           )])
    (set! p2 (struct-copy pos p2[peca (pos-peca p1)] [destinavel #f]))
@@ -623,13 +623,22 @@
 
 ;void -> universe
 ;Inicia um novo jogo entre duas IA's
-(define (start-new-ia-game)
-  (set! jogadorIA-dois preto)
+(define (start-new-ia-ia-game)
+  (set! jogadorIA      (jogador "Computador 1" 0 branco))
+  (set! jogadorIA-dois (jogador "Computador 2" 0 preto ))
+  (start-new-game)
+)
+
+;void -> universe
+;Inicia um novo jogo entre duas IA's
+(define (start-new-h-ia-game)
+  (set! jogadorHumano  (jogador nomeJogador    0 branco))
+  (set! jogadorIA-dois (jogador "Computador 2" 0 preto ))
   (start-new-game)
 )
 
 
-(start-new-ia-game)
+(start-new-ia-ia-game)
 ;+--------------------------------------------+
 ;|                Tela Inicial                |
 ;+--------------------------------------------+
