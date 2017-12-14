@@ -187,7 +187,7 @@
         (rectangle largura-bottombar altura-bottombar "solid" btn-bar-color)
         (text (string-append (get-placar-string j1) " x " (get-placar-string j2)) 24 "white")
       )
-      (text (string-append " Vez do jogador " (jogador-nome j1)) 18 "white")
+      (text (string-append " Vez do jogador " (jogador-nome (jogada-jogador partida))) 18 "white")
     )
     (text (string-append (number->string movimentos) " Movimentos") 18 "white")
   )
@@ -741,11 +741,11 @@
 (new gui:button% [parent panel-jogador1] [label "Ok"]
                                 [callback (lambda (button event)
                                           (set! nomeJogador1 (send jogador1txt get-value))
+                                          (send frame-jogador1 show #f)
                                           (if (zero? game-mode)
                                             (send frame-jogador2 show #t)
                                             (start-new-h-ia-game)
                                           )
-                                          (send frame-jogador1 show #f)
                                           #t #f)])
 
 (define frame-jogador2 (new gui:frame% [label "Nome dos Jogadores"]))
