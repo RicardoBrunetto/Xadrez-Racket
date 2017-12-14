@@ -21,7 +21,7 @@ Segundo Trabalho de Paradigma de Programação Lógica e Funcional
     - [x] Repetição
   - [ ] Coordenadas
   - [ ] Ranking
-  - [ ] Sistema de Jogadores
+  - [x] Sistema de Jogadores
 - [x] Testes
   - [x] Documentação de CADA função
   - [x] Testes de CADA função

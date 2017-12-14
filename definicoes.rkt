@@ -35,55 +35,7 @@
   (jogada newTabuleiro newJogador newKing newPb newPp)
 )
 ;Estrutura que define um jogador
-(struct jogador (nome pontos cor))
-
-;;color -> string
-;;Retorna o nome do jogador
-;(define (get-nome player)
-;  (cond
-;    [(equal? player branco) "BRANCO"]
-;    [(equal? player preto) "PRETO"]
-;  )
-;)
-
-;number number jogador number -> image
-;Gera uma bottom-bar com as informações
-(define (bottom-bar placarB placarP player movimentos)
-  (underlay/align "right" "bottom"
-    (underlay/align "left" "bottom"
-      (underlay/align "center" "center"
-        (rectangle largura-bottombar altura-bottombar "solid" btn-bar-color)
-        (text (string-append "Brancos " (number->string placarB) " x " (number->string placarP) " Pretos") 24 "white")
-      )
-      (text (string-append " Vez do jogador " (jogador-nome player)) 18 "white")
-    )
-    (text (string-append (number->string movimentos) " Movimentos") 18 "white")
-  )
-)
-
-;jogada number -> image
-;Cria a tela de fim de jogo
-(define (make-end-screen partida movimentos)
-    (underlay/align "center" "bottom"
-      (underlay/align "center" "top"
-          (underlay/align "center" "center"
-            (rectangle lado-tabuleiro (+ lado-tabuleiro altura-bottombar) "solid" "black")
-            pic-gameover)
-          (text/font "Tecle [ENTER] para jogar novamente"
-                30 branco "Gill Sans" 'swiss 'normal 'bold #f)
-      )
-      (above
-        (text/font (string-append " Vitória do Jogador " (get-nome (jogada-jogador partida)))
-              30 branco "Gill Sans" 'swiss 'normal 'bold #f)
-        (text/font (string-append  "\n\n" (number->string movimentos) " movimentos\n\n")
-              15 branco "Gill Sans" 'swiss 'normal 'bold #f)
-        (text/font (string-append " \nPontuação final")
-              15 branco "Gill Sans" 'swiss 'normal 'bold #f)
-        (text/font (string-append  "BRANCO " (number->string (jogada-ptsB partida)) " x " (number->string (jogada-ptsP partida)) " PRETO\n\n")
-              30 branco "Gill Sans" 'swiss 'normal 'bold #f)
-      )
-    )
-)
+(struct jogador (nome cor) #:mutable)
 
 ;Estrutura de peça do tabuleiro
 ;Contém um id único (natural)

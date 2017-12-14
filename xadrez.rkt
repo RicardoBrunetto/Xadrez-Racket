@@ -12,10 +12,11 @@
 ;+--------------------------------------------+
 ;|          Importação de Bibliotecas         |
 ;+--------------------------------------------+
-(require math)
 (require 2htdp/universe)
 (require 2htdp/image)
+(require (prefix-in gui: racket/gui))
 (require lang/posn)
+(require math)
 (require math/matrix)
 (require rackunit)
 (require rackunit/text-ui)
@@ -29,13 +30,15 @@
 ;|                 Definições                 |
 ;+--------------------------------------------+
 (define ranking empty)
-(define jogadorIA empty) ;Define quem é o jogador IA 1
-(define jogadorIA-dois empty) ;Define quem é o jogador IA 2
-(define jogadorHumano empty) ;Define quem é o jogador Humano
-(define nomeJogador "Humano") ;Define o nome do jogador humano
+(define jogadorIA1 empty) ;Define quem é o jogador IA 1
+(define jogadorIA2 empty) ;Define quem é o jogador IA 2
+(define jogadorHumano1 empty) ;Define quem é o jogador Humano 1
+(define jogadorHumano2 empty) ;Define quem é o jogador Humano 2
+(define nomeJogador1 "Humano1") ;Define o nome do jogador humano 1
+(define nomeJogador2 "Humano2") ;Define o nome do jogador humano 2
 (define select 0) ;Variável para controlar os cliques (selecionar origem = 0 / selecionar destino = 1)
 (define movimentos 0) ;Variável para contar os movimentos
-(define jogador-atual branco) ;Define quem é o jogador atual
+(define jogador-atual empty) ;Define quem é o jogador atual
 (define possibilidades-temporarias empty) ;Lista de possibilidades de locomoção temporárias
 (define posicao-origem empty) ;Posição de origem (de onde um jogador deseja fazer o movimento)
 (define king-is-dead 0) ;Variável que atesta que ambos reis estão vivos (0) ou algum está morto (1)
@@ -51,7 +54,7 @@
                                    #[A2 B2 C2 D2 E2 F2 G2 H2]
                                    #[A1 B1 C1 D1 E1 F1 G1 H1]]))
 ;Definição de como o jogo deve começar
-(define jogada-inicial (make-jogada (mutable-array-copy tabuleiro) jogador-atual king-is-dead pts-branco pts-preto))
+(define jogada-inicial empty)
 ; Lista de funções para as possibilidades de locomoção do Cavalo
 (define Lf-Cavalo (list (list (λ(x)(sub1 x))  (λ(y)(+ y 2)))
                         (list (λ(x)(add1 x))  (λ(y)(+ y 2)))
@@ -121,16 +124,6 @@
   )
 )
 
-;void -> cor
-;Altera a vez de quem está jogando, retornando-a.
-(define (change-player)
-  (set! movimentos (add1 movimentos))
-  (if (equal? (jogador-cor jogador-atual) branco)
-      (set! (jogador-cor jogador-atual) preto)
-      (set! (jogador-cor jogador-atual) branco))
-  jogador-atual
-)
-
 ;Posicao -> number
 ;Retorna o valor de pontos da peça contida na posição posX
 (define (get-pontos-pos posX)
@@ -155,6 +148,79 @@
 (define (get-maior-pos posX posY)
   (if (> (get-pontos-pos posX) (get-pontos-pos posY)) posX posY)
 )
+
+;void -> jogador
+;Encontra a vez de quem está jogará, retornando-o.
+(define (change-player)
+  (cond
+    [(and (not (empty? jogadorHumano1))(equal? (jogador-nome jogador-atual) (jogador-nome jogadorHumano1))) ;JH1
+      (if (empty? jogadorIA1) jogadorHumano2 jogadorIA1)
+    ]
+    [(and (not (empty? jogadorIA1))(equal? (jogador-nome jogador-atual) (jogador-nome jogadorIA1))) ;JIA1
+      (if (empty? jogadorIA2) jogadorHumano1 jogadorIA2)
+    ]
+    [(and (not (empty? jogadorHumano2))(equal? (jogador-nome jogador-atual) (jogador-nome jogadorHumano2))) ;JH2
+      jogadorHumano1
+    ]
+    [(and (not (empty? jogadorIA2))(equal? (jogador-nome jogador-atual) (jogador-nome jogadorIA2))) ;JIA2
+      jogadorIA1
+    ]
+)
+)
+
+;jogador -> string
+;Retorna o placar do jogador
+(define (get-placar-string j1)
+  (if (equal? (jogador-cor j1) branco)
+      (string-append (jogador-nome j1) " " (number->string pts-branco))
+      (string-append (number->string pts-preto) " " (jogador-nome j1)))
+)
+
+;jogada number -> image
+;Gera uma bottom-bar com as informações
+(define (bottom-bar partida movimentos)
+  (define j1 (if (equal? branco (jogador-cor (jogada-jogador partida))) (jogada-jogador partida) (change-player)))
+  (define j2 (if (equal? j1 (jogada-jogador partida)) (change-player) (jogada-jogador partida)))
+  (underlay/align "right" "bottom"
+    (underlay/align "left" "bottom"
+      (underlay/align "center" "center"
+        (rectangle largura-bottombar altura-bottombar "solid" btn-bar-color)
+        (text (string-append (get-placar-string j1) " x " (get-placar-string j2)) 24 "white")
+      )
+      (text (string-append " Vez do jogador " (jogador-nome j1)) 18 "white")
+    )
+    (text (string-append (number->string movimentos) " Movimentos") 18 "white")
+  )
+)
+
+;jogada number -> image
+;Cria a tela de fim de jogo
+(define (make-end-screen partida movimentos)
+    (define j1 (if (equal? branco (jogador-cor (jogada-jogador partida))) (jogada-jogador partida) (change-player)))
+    (define j2 (if (equal? j1 (jogada-jogador partida)) (change-player) (jogada-jogador partida)))
+    (underlay/align "center" "bottom"
+      (underlay/align "center" "top"
+          (underlay/align "center" "center"
+            (rectangle lado-tabuleiro (+ lado-tabuleiro altura-bottombar) "solid" "black")
+            pic-gameover)
+          (text/font "Tecle [ENTER] para jogar novamente"
+                30 branco "Gill Sans" 'swiss 'normal 'bold #f)
+      )
+      (above
+        (text/font (string-append "\n\nVitória do Jogador")
+              15 branco "Gill Sans" 'swiss 'normal 'bold #f)
+        (text/font  (jogador-nome (jogada-jogador partida))
+              30 branco "Gill Sans" 'swiss 'normal 'bold #f)
+        (text/font (string-append  "\n\n" (number->string movimentos) " movimentos\n\n")
+              15 branco "Gill Sans" 'swiss 'normal 'bold #f)
+        (text/font (string-append " \nPontuação final")
+              15 branco "Gill Sans" 'swiss 'normal 'bold #f)
+        (text/font (string-append (get-placar-string j1) " x " (get-placar-string j2))
+              30 branco "Gill Sans" 'swiss 'normal 'bold #f)
+      )
+    )
+)
+
 
 ;+--------------------------------------------+
 ;|           Inteligência Artificial          |
@@ -193,7 +259,7 @@
     (get-destino-interno empty (get-possibilidades-peca posX))
   )
   (define posOrigem (selecionar-Origem))
-  (make-jogada (mover-peca posOrigem (get-destino posOrigem) tabinterno) (change-player) (check-king) pts-branco pts-preto)
+  (make-jogada (mover-peca posOrigem (get-destino posOrigem) tabinterno) jogador-atual (check-king) pts-branco pts-preto)
 )
 
 ;+--------------------------------------------+
@@ -203,20 +269,22 @@
 ;peca peca mutable-array -> jogada
 ;Retorna um novo tabuleiro onde p1 assumiu o lugar de p2 e p2 está fora da jogada
 (define (mover-peca p1 p2 tabinterno)
+  (if (and (empty? jogadorIA2) (equal? jogador-atual jogadorIA1)) (sleep 1) (sleep 0))
   (void
    (cond
      [(empty? (pos-peca p2)) void]
      [else
-      (cond [(equal? (peca-tipo (pos-peca p2)) "rei")
-              (set! king-is-dead 1)]
-            [(equal? (jogador-cor jogador-atual) branco)
-             (set! pts-branco (+ pts-branco (get-pontos-pos p2)))]
-            [(equal? (jogador-cor jogador-atual) preto)
-             (set! pts-preto (+ pts-preto (get-pontos-pos p2)))]
-          )])
+      (if(equal? (jogador-cor jogador-atual) branco)
+             (set! pts-branco (+ pts-branco (get-pontos-pos p2)))
+             (set! pts-preto (+ pts-preto (get-pontos-pos p2))))
+      (if(equal? (peca-tipo (pos-peca p2)) "rei")
+             (void (set! king-is-dead 1) (set! jogador-atual (change-player))) void)
+     ])
+   (set! movimentos (add1 movimentos))
    (set! p2 (struct-copy pos p2[peca (pos-peca p1)] [destinavel #f]))
    (set! p1 (struct-copy pos p1[peca empty]))
    (set! select 0)
+   (set! jogador-atual (change-player))
    (array-set! tabinterno (vector (pos-x p2) (pos-y p2)) p2)
    (array-set! tabinterno (vector (pos-x p1) (pos-y p1)) p1))
   (reset-selecao-pos possibilidades-temporarias tabinterno)
@@ -489,8 +557,7 @@
        (generate-layout-interno  (rest Lp) (cons (make-celula (get-background-pos posX) posX) Lpos))
       ]
   ))
-  (cond [(not (empty? jogadorIA-dois)) (sleep 1)])
-  (append (generate-layout-interno Lpar-xy empty) (list (bottom-bar (jogada-ptsB w) (jogada-ptsP w) (jogada-jogador w) movimentos)))
+  (append (generate-layout-interno Lpar-xy empty) (list (bottom-bar w movimentos)))
 )
 
 ;void -> Lista[posn]
@@ -539,7 +606,7 @@
 ;jogada number number string -> jogada
 ;Manipula um evento de mouse (MouseEvent) nas coordenadas x y
 (define (mouse-handler ws x y event)
-  (cond [(and (not (empty? jogadorIA))(equal? (jogada-jogador ws) jogadorIA)) ws]
+  (cond [(and (not (empty? jogadorIA1))(equal? (jogador-nome (jogada-jogador ws)) (jogador-nome jogadorIA1))) ws]
         [(string=? event "button-down")
          (let ([posClicada (get-pos-at (quotient y 100) (quotient x 100))])
            (if (empty? posClicada) ws
@@ -547,7 +614,7 @@
            ;Jogador selecionando a origem
              (if (empty? (pos-peca posClicada))
                  ws
-                 (if(equal? (peca-cor (pos-peca posClicada)) (jogada-jogador ws))
+                 (if(equal? (peca-cor (pos-peca posClicada)) (jogador-cor (jogada-jogador ws)))
                   (and (void
                   (set! possibilidades-temporarias
                         (get-possibilidades-peca posClicada))
@@ -561,7 +628,7 @@
             )
            ; Jogador selecionando o destino
              (if (memf (λ(x)(and (equal? (pos-x posClicada) (pos-x x)) (equal? (pos-y posClicada) (pos-y x)))) possibilidades-temporarias)
-                 (make-jogada (mover-peca posicao-origem posClicada (jogada-tab ws)) (change-player) (check-king) pts-branco pts-preto);Posição válida
+                 (make-jogada (mover-peca posicao-origem posClicada (jogada-tab ws)) jogador-atual (check-king) pts-branco pts-preto);Posição válida
                  ws;Posição inválida
              )
            )))
@@ -583,7 +650,7 @@
 ;jogada -> image
 ;Desenha a interface gráfica do usuário
 (define (desenhar-gui w)
-  ; (void (display (jogada-king w)))
+  (if (empty? jogadorHumano1) (sleep 1) (sleep 0))
   (if (zero? (jogada-king w))
     (place-images
      (generate-layout w)
@@ -598,13 +665,13 @@
 ;Caso a IA esteja habilitada, faz uma jogada
 (define (vez-da-IA w)
   (if (zero? (jogada-king w))
-    (if (equal? (jogada-jogador w) jogadorIA)
+    (if (empty? jogadorIA1) w
+    (if (equal? (jogador-nome (jogada-jogador w)) (jogador-nome jogadorIA1))
       (jogada-IA w)
-      (if (empty? jogadorIA-dois)
+      (if (empty? jogadorIA2)
         w
         (jogada-IA w)
-      )
-    )
+    )))
     w
   )
 )
@@ -624,35 +691,70 @@
 ;void -> universe
 ;Inicia um novo jogo entre duas IA's
 (define (start-new-ia-ia-game)
-  (set! jogadorIA      (jogador "Computador 1" 0 branco))
-  (set! jogadorIA-dois (jogador "Computador 2" 0 preto ))
+  (set! jogadorIA1  (jogador "Android" branco))
+  (set! jogadorIA2  (jogador "iOS" preto ))
+  (set! jogador-atual jogadorIA1)
+  (set! jogada-inicial (make-jogada (mutable-array-copy tabuleiro) jogador-atual king-is-dead pts-branco pts-preto))
   (start-new-game)
 )
 
 ;void -> universe
 ;Inicia um novo jogo entre duas IA's
 (define (start-new-h-ia-game)
-  (set! jogadorHumano  (jogador nomeJogador    0 branco))
-  (set! jogadorIA-dois (jogador "Computador 2" 0 preto ))
+  (set! jogadorHumano1 (jogador nomeJogador1   branco))
+  (set! jogadorIA1     (jogador "Computador"   preto ))
+  (set! jogador-atual jogadorHumano1)
+  (set! jogada-inicial (make-jogada (mutable-array-copy tabuleiro) jogador-atual king-is-dead pts-branco pts-preto))
   (start-new-game)
 )
 
+;void -> universe
+;Inicia um novo jogo entre dois humanos
+(define (start-new-h-h-game)
+  (set! jogadorHumano1 (jogador nomeJogador1   branco))
+  (set! jogadorHumano2 (jogador nomeJogador2   preto ))
+  (set! jogador-atual jogadorHumano1)
+  (set! jogada-inicial (make-jogada (mutable-array-copy tabuleiro) jogador-atual king-is-dead pts-branco pts-preto))
+  (start-new-game)
+)
 
-(start-new-ia-ia-game)
 ;+--------------------------------------------+
 ;|                Tela Inicial                |
 ;+--------------------------------------------+
+(define game-mode empty) ; Variável que define o tipo de jogo
 
-;(define (desenhar-tela-inicial w)
-;  (read (current-input-port))
-;)
+(define frame (new gui:frame% [label "Configurações Iniciais"]))
+(new gui:message% [parent frame] [label "Escolha o modo de jogo"])
+(define panel (new gui:horizontal-panel% [parent frame] [alignment '(center center)]))
+(new gui:button% [parent panel] [label "Humano vs Humano"]
+        [callback (lambda (button event)  (send frame show #f) (set! game-mode 0) (send frame-jogador1 show #t) #t #f)])
+(new gui:button% [parent panel] [label "Humano vs Computador"]
+        [callback (lambda (button event)  (send frame show #f) (set! game-mode 1) (send frame-jogador1 show #t) #t #f)])
+(new gui:button% [parent panel] [label "Computador vs Computador"]
+        [callback (lambda (button event)  (send frame show #f) (start-new-ia-ia-game) #f #t )])
+(send frame show #t)
 
-;(start-new-game)
-;(big-bang jogadores
-;  (to-draw desenhar-tela-inicial)
-;  ;(on-mouse mouse-handler)
-;  ;(on-tick vez-da-IA)
-;  (name "Insira seu nome"))
+(define frame-jogador1 (new gui:frame% [label "Nome dos Jogadores"]))
+(define panel-jogador1 (new gui:horizontal-panel% [parent frame-jogador1] [alignment '(center center)]))
+(new gui:message% [parent frame-jogador1] [label "Informe o nome do Jogador 1 (Peças Brancas)"])
+(define jogador1txt (new gui:text-field% [parent panel-jogador1] [label "Jogador 1"]))
+(new gui:button% [parent panel-jogador1] [label "Ok"]
+                                [callback (lambda (button event)
+                                          (set! nomeJogador1 (send jogador1txt get-value))
+                                          (if (zero? game-mode)
+                                            (send frame-jogador2 show #t)
+                                            (start-new-h-ia-game)
+                                          )
+                                          (send frame-jogador1 show #f)
+                                          #t #f)])
+
+(define frame-jogador2 (new gui:frame% [label "Nome dos Jogadores"]))
+(define panel-jogador2 (new gui:horizontal-panel% [parent frame-jogador2] [alignment '(center center)]))
+(new gui:message% [parent frame-jogador2]
+                      [label "Informe o nome do Jogador2 (Peças Pretas)"])
+(define jogador2txt (new gui:text-field% [parent panel-jogador2] [label "Jogador 2"]))
+(new gui:button% [parent panel-jogador2] [label "Ok"]
+                                [callback (lambda (button event)  (set! nomeJogador2 (send jogador2txt get-value)) (send frame-jogador2 show #f) (start-new-h-h-game) #t #f)])
 
 ;+--------------------------------------------+
 ;|             Execução de Testes             |
