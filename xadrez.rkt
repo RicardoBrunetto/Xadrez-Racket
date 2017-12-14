@@ -766,7 +766,6 @@
 ;  (run-tests (test-suite "Todos os testes" testes))
 ;  (void))
 ;
-;;; Chama a função para executar os testes.
 ;(executa-testes
 ;  remove-empty-tests
 ;  get-pos-valida-tabuleiro-tests
