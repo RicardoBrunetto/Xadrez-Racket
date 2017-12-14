@@ -1,0 +1,40 @@
+;+----------------------------------------------+
+;|  Paradigma de Programação Lógica e Funcional |
+;|                    Xadrez                    |
+;|                                              |
+;|      Ricardo Henrique Brunetto - RA94182     |
+;|                Dezembro/2017                 |
+;|                Maringá - PR                  |
+;+----------------------------------------------+
+
+#lang racket
+;+----------------------------+
+;|  Importação de Bibliotecas |
+;+----------------------------+
+(require (lib "graphics.ss" "graphics"))
+
+;Definições e Constantes
+(open-graphics)
+(define janela (open-viewport "Xadrez" 660 660)) ;
+(define cinza (make-rgb 0.4 0.4 0.4))
+(define u 0) ;Intercalar o tabuleiro com as cores
+(define h 0) ;Posição inicial do eixo x
+(define v 0) ;Posição inicial de eixo y
+
+(struct peca (x y cor vivo) #:transparent)
+;(struct tabuleiro (
+
+(define make-display
+  (for ([v (in-range 11 651 80)])
+    (if (equal? u 0)
+      (for ([h (in-range 11 570 160)])
+        ((draw-solid-rectangle janela) (make-posn h v) 79 79 cinza)
+        (display u)
+        (set! u (+ u 1))
+      )
+      (for ([h (in-range 91 651 160)])
+        ((draw-solid-rectangle janela) (make-posn h v) 79 79 cinza)
+        (set! u (- u 1))
+      )
+  )
+))
