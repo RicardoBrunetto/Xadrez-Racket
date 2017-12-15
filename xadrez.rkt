@@ -762,11 +762,11 @@
 
 ;; Teste ... -> Void
 ;; Executa um conjunto de testes.
-;(define (executa-testes . testes)
+; (define (executa-testes . testes)
 ;  (run-tests (test-suite "Todos os testes" testes))
 ;  (void))
 ;
-;(executa-testes
+; (executa-testes
 ;  remove-empty-tests
 ;  get-pos-valida-tabuleiro-tests
 ;  get-peaop-possibilidades-tests
@@ -776,4 +776,4 @@
 ;  get-bispo-possibilidades-tests
 ;  get-rainha-possibilidades-tests
 ;  get-rei-possibilidades-tests
-;)
+; )
