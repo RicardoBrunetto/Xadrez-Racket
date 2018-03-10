@@ -48,6 +48,7 @@ O relatório com detalhes de implementação consta [aqui](Relatório/main.pdf).
 
 ## Licença
 As imagens utilizadas foram obtidas no Wikipedia, sob licença livre.
+
 Este projeto segue a licença [Creative Commons Attribution-ShareAlike (BY-SA)](https://creativecommons.org/licenses/by-sa/4.0/), que está detalhada no arquivo [`LICENSE.md`](LICENSE.md).
 <p align="center">
   <img src="https://licensebuttons.net/l/by-sa/3.0/88x31.png">
